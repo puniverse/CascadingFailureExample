@@ -15,11 +15,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
-import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.handler.HandlerList;
-import org.eclipse.jetty.server.handler.ShutdownHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
@@ -67,6 +64,18 @@ public class CascadingFailureServer {
                 }
             }
         }), "/simple");
+        context.addServlet(new ServletHolder(new FiberHttpServlet() {
+            @Override
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException, SuspendExecution {
+                try (PrintWriter out = resp.getWriter()) {
+                    int sleeptime = parseInt(req.getParameter("sleep"), 10);
+                    out.println("sleeping " + sleeptime + "ms starting now: " + new Date() + " \n");
+                    Fiber.sleep(sleeptime);
+                } catch (InterruptedException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        }), "/target");
         context.addServlet(new ServletHolder(new FiberHttpServlet() {
             @Override
             protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException, SuspendExecution {
