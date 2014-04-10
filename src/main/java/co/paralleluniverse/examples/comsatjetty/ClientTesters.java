@@ -18,10 +18,14 @@ import javax.ws.rs.core.Response;
 public class ClientTesters {
 
     public static void main(String[] args) throws InterruptedException {
-        final String HOST = System.getProperty("co.paralleluniverse.cascadingfailure.host","http://localhost:8080");
-        final String URL1 = HOST+System.getProperty("co.paralleluniverse.cascadingfailure.path","/regular?sleep=10");
+        if (args.length<3){
+            System.out.println("Usage: ClientTesters http://localhost:8080 /regular?sleep=10 500");
+            System.exit(0);
+        }
+        final String HOST = args[0];
+        final String URL1 = HOST+args[1];
         final String URL2 = HOST+"/simple";
-        final int REQ_PER_SEC = Integer.parseInt(System.getProperty("co.paralleluniverse.cascadingfailure.rate","500"));
+        final int REQ_PER_SEC = Integer.parseInt(args[2]);
         final int DURATION = 10;
         final int MAX_URL1_OPEN_CONNECTIONS = 500;
         final ThreadFactory deamonTF = new ThreadFactoryBuilder().setDaemon(true).build();

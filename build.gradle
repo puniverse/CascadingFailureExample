@@ -41,9 +41,10 @@ task(runServer, dependsOn: 'classes', type: JavaExec) {
 }
 task(runClients, dependsOn: 'classes', type: JavaExec) {
     main = 'co.paralleluniverse.examples.comsatjetty.ClientTesters'
-    systemProperty "co.paralleluniverse.cascadingfailure.host","http://localhost:8080"
-    systemProperty "co.paralleluniverse.cascadingfailure.path","/regular?sleep=10"    
-    systemProperty "co.paralleluniverse.cascadingfailure.rate","500"
+    if(project.hasProperty('args')){
+        args project.args.split('\\s+')
+    } else {
+        args "http://localhost:8080","/regular?sleep=10","500"
+    }
 }
-
 defaultTasks 'runServer'
