@@ -1,4 +1,4 @@
-#wget https://raw.githubusercontent.com/puniverse/NIOQuasarTest/master/install.sh
+#wget https://raw.githubusercontent.com/puniverse/CascadingFailureExample/master/install.sh
 #chmod+x and run
 
 # install jdk8
