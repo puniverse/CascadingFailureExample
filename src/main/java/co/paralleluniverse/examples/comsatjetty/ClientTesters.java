@@ -1,6 +1,5 @@
 package co.paralleluniverse.examples.comsatjetty;
 
-import co.paralleluniverse.common.benchmark.StripedHistogram;
 import co.paralleluniverse.common.benchmark.StripedLongTimeSeries;
 import co.paralleluniverse.concurrent.util.ThreadUtil;
 import co.paralleluniverse.fibers.Fiber;
@@ -19,8 +18,9 @@ import javax.ws.rs.core.Response;
 public class ClientTesters {
 
     public static void main(String[] args) throws InterruptedException {
-        final String URL1 = "http://localhost:8080/fiber";
-        final String URL2 = "http://localhost:8080/simple";
+        final String HOST = System.getProperty("co.paralleluniverse.cascadingfailure.host","http://localhost:8080");        
+        final String URL1 = HOST+System.getProperty("co.paralleluniverse.cascadingfailure.path","/regular?sleep=10");
+        final String URL2 = HOST+"/simple";
         final int REQ_PER_SEC = 100;
         final int DURATION = 10;
         final int MAX_URL1_OPEN_CONNECTIONS = 500;
@@ -84,10 +84,8 @@ public class ClientTesters {
 
         System.out.println("finished " + url1Counter);
         System.out.println("finished " + url2Counter);
-        System.out.println("*************************");
-        stsLatancyURL2.getRecords().forEach(rec->System.out.println(TimeUnit.NANOSECONDS.toMillis(rec.timestamp-start)+": "+rec.value));
-        System.out.println("*************************");
-        stsOenURL1.getRecords().forEach(rec->System.out.println(TimeUnit.NANOSECONDS.toMillis(rec.timestamp-start)+": "+ rec.value));
+        stsLatancyURL2.getRecords().forEach(rec->System.out.println("url2_lat "+TimeUnit.NANOSECONDS.toMillis(rec.timestamp-start)+" "+rec.value));
+        stsOenURL1.getRecords().forEach(rec->System.out.println("url1_cnt "+TimeUnit.NANOSECONDS.toMillis(rec.timestamp-start)+" "+ rec.value));
         ThreadUtil.dumpThreads();
     }
 }
