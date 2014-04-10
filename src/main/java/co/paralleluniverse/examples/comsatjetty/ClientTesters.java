@@ -28,6 +28,7 @@ public class ClientTesters {
         final int REQ_PER_SEC = Integer.parseInt(args[2]);
         final int DURATION = 10;
         final int MAX_URL1_OPEN_CONNECTIONS = 500;
+        System.out.println("configuration: "+HOST+" "+URL1+" "+REQ_PER_SEC);
         final ThreadFactory deamonTF = new ThreadFactoryBuilder().setDaemon(true).build();
 
         final Client newClient = AsyncClientBuilder.newClient();
