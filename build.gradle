@@ -43,6 +43,7 @@ task(runClients, dependsOn: 'classes', type: JavaExec) {
     main = 'co.paralleluniverse.examples.comsatjetty.ClientTesters'
     systemProperty "co.paralleluniverse.cascadingfailure.host","http://localhost:8080"
     systemProperty "co.paralleluniverse.cascadingfailure.path","/regular?sleep=10"    
+    systemProperty "co.paralleluniverse.cascadingfailure.rate","500"
 }
 
 defaultTasks 'runServer'
