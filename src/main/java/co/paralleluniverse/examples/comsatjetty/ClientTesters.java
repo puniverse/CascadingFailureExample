@@ -26,8 +26,9 @@ public class ClientTesters {
         final String URL1 = HOST+args[1];
         final String URL2 = HOST+"/simple";
         final int REQ_PER_SEC = Integer.parseInt(args[2]);
-        final int DURATION = 10;
-        final int MAX_URL1_OPEN_CONNECTIONS = 500;
+        final int WARMUP = 3;
+        final int DURATION = 10 + WARMUP;
+        final int MAX_URL1_OPEN_CONNECTIONS = 50000;
         System.out.println("configuration: "+HOST+" "+URL1+" "+REQ_PER_SEC);
         final ThreadFactory deamonTF = new ThreadFactoryBuilder().setDaemon(true).build();
 
@@ -41,7 +42,7 @@ public class ClientTesters {
         System.out.println("starting");
         final long start = System.nanoTime();
         Thread url1Thread = deamonTF.newThread(() -> {
-            final RateLimiter rl = RateLimiter.create(REQ_PER_SEC, 2, TimeUnit.SECONDS);
+            final RateLimiter rl = RateLimiter.create(REQ_PER_SEC, WARMUP, TimeUnit.SECONDS);
             for (long ct = start; ct < start + TimeUnit.SECONDS.toNanos(DURATION); ct = System.nanoTime()) {
                 rl.acquire();
                 stsOenURL1.record(ct, MAX_URL1_OPEN_CONNECTIONS - sem.availablePermits());
