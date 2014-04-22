@@ -1,7 +1,6 @@
 package co.paralleluniverse.examples.comsatjetty;
 
 import co.paralleluniverse.common.benchmark.StripedLongTimeSeries;
-import co.paralleluniverse.concurrent.util.ThreadUtil;
 import co.paralleluniverse.fibers.Fiber;
 import co.paralleluniverse.fibers.ws.rs.client.AsyncClientBuilder;
 import com.google.common.util.concurrent.RateLimiter;
@@ -18,14 +17,15 @@ import javax.ws.rs.core.Response;
 public class ClientTesters {
 
     public static void main(String[] args) throws InterruptedException {
-        if (args.length<3){
-            System.out.println("Usage: ClientTesters http://localhost:8080 /regular?sleep=10 500");
+        if (args.length<4){
+            System.out.println("Usage: ClientTesters baseUrl servletPath sleepTime rate");
+            System.out.println("Example:\n\tClientTesters http://localhost:8080 /regular 10 500");
             System.exit(0);
         }
         final String HOST = args[0];
-        final String URL1 = HOST+args[1];
+        final String URL1 = HOST+args[1]+"?sleep="+args[2];
         final String URL2 = HOST+"/simple";
-        final int REQ_PER_SEC = Integer.parseInt(args[2]);
+        final int REQ_PER_SEC = Integer.parseInt(args[3]);
         final int WARMUP = 3;
         final int DURATION = 10 + WARMUP;
         final int MAX_URL1_OPEN_CONNECTIONS = 50000;
@@ -55,6 +55,7 @@ public class ClientTesters {
                         if (resp.getStatus() == 200)
                             url1Counter.incrementAndGet();
                     } catch (ExecutionException | TimeoutException ex) {
+                        System.out.println("url1exp: "+ex);
                     } finally {
                         sem.release();
                     }
@@ -73,7 +74,8 @@ public class ClientTesters {
                         if (resp.getStatus() == 200) 
                             url2Counter.incrementAndGet();
                         stsLatancyURL2.record(reqStart, millis);
-                    } catch (ExecutionException | TimeoutException ex) {
+                    } catch (ExecutionException | TimeoutException ex) {                        
+                        System.out.println("url2exp: "+ex);
                         stsLatancyURL2.record(reqStart, 5000);
                     }
                 }).start();
@@ -90,8 +92,7 @@ public class ClientTesters {
 
         System.out.println("finished " + url1Counter);
         System.out.println("finished " + url2Counter);
-        stsLatancyURL2.getRecords().forEach(rec->System.out.println("url2_lat "+TimeUnit.NANOSECONDS.toMillis(rec.timestamp-start)+" "+rec.value));
-        stsOenURL1.getRecords().forEach(rec->System.out.println("url1_cnt "+TimeUnit.NANOSECONDS.toMillis(rec.timestamp-start)+" "+ rec.value));
-        ThreadUtil.dumpThreads();
+//        stsLatancyURL2.getRecords().forEach(rec->System.out.println("url2_lat "+TimeUnit.NANOSECONDS.toMillis(rec.timestamp-start)+" "+rec.value));
+//        stsOenURL1.getRecords().forEach(rec->System.out.println("url1_cnt "+TimeUnit.NANOSECONDS.toMillis(rec.timestamp-start)+" "+ rec.value));
     }
 }

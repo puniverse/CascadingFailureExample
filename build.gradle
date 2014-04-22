@@ -7,22 +7,35 @@ if (!hasProperty('mainClass')) {
     ext.mainClass = ''
 }
 ext.quasarVersion = '0.5.0'
-ext.comsatVersion = '0.1.1'
+ext.comsatVersion = '0.1.2-SNAPSHOT'
+ext.jettyVersion  = '9.1.0.RC0'
 
 repositories {
     mavenLocal();
     mavenCentral()
     maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+    maven { url 'https://maven.java.net/content/repositories/snapshots' }
 }
 configurations {
     quasar
+}
+
+configurations.all {
+    resolutionStrategy {
+//        failOnVersionConflict()
+        force 'org.slf4j:slf4j-api:1.7.6'
+        force 'com.google.guava:guava:16.0.1'
+        force 'org.ow2.asm:asm:5.0.1'
+        force 'org.ow2.asm:asm-commons:5.0.1'
+    }
 }
 
 dependencies {
     compile "co.paralleluniverse:quasar-core:$quasarVersion"
     compile "co.paralleluniverse:comsat-servlet:$comsatVersion"
     compile "co.paralleluniverse:comsat-jax-rs-client:$comsatVersion"    
-    compile 'org.eclipse.jetty.websocket:javax-websocket-server-impl:9.1.3.v20140225'
+    compile "org.eclipse.jetty:jetty-server:$jettyVersion"
+    compile "org.eclipse.jetty:jetty-servlet:$jettyVersion"
     quasar  "co.paralleluniverse:quasar-core:$quasarVersion"
 }
 
@@ -30,21 +43,29 @@ tasks.withType(JavaExec) {
     main = mainClass
     jvmArgs "-javaagent:${configurations.quasar.iterator().next()}" // =v, =d
     jvmArgs '-server'
-//    jvmArgs '-Xmx1024m'
-    jvmArgs "-ea"
+    //    jvmArgs '-Xmx1024m'
+    //    jvmArgs "-ea"
     classpath = sourceSets.main.runtimeClasspath   
     // systemProperty 'co.paralleluniverse.fibers.verifyInstrumentation', 'true'
 }
 
-task(runServer, dependsOn: 'classes', type: JavaExec) {
+task(Server, dependsOn: 'classes', type: JavaExec) {
     main = 'co.paralleluniverse.examples.comsatjetty.CascadingFailureServer'
 }
-task(runClients, dependsOn: 'classes', type: JavaExec) {
+task(Clients, dependsOn: 'classes', type: JavaExec) {
     main = 'co.paralleluniverse.examples.comsatjetty.ClientTesters'
     if(project.hasProperty('args')){
         args project.args.split('\\s+')
-    } else {
-        args "http://localhost:8080","/regular?sleep=10","500"
+        //    } else {
+        //        args "http://localhost:8080","/regular","10","500"
     }
 }
-defaultTasks 'runServer'
+task(TKB, dependsOn: 'classes', type: JavaExec) {
+    main = 'co.paralleluniverse.examples.comsatjetty.TKBProblemWithAsyncJersy'
+    if(project.hasProperty('args')){
+        args project.args.split('\\s+')
+    } else {
+        args "http://localhost:8080","/regular","1000","1"    
+    }
+}
+defaultTasks 'Server'

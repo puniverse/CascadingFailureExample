@@ -22,13 +22,16 @@ import org.eclipse.jetty.util.thread.QueuedThreadPool;
 public class CascadingFailureServer {
     public static void main(String[] args) throws Exception {
         QueuedThreadPool queuedThreadPool = new QueuedThreadPool();
-        queuedThreadPool.setMaxThreads(5000);
-        final Server server = new Server(queuedThreadPool);
-        ServerConnector http = new ServerConnector(server);
-        http.setPort(8080);
-        http.setIdleTimeout(30000);
-        http.setAcceptQueueSize(5000);
-        server.addConnector(http);
+        queuedThreadPool.setMaxThreads(200);
+        queuedThreadPool.setMinThreads(200);
+        
+//        final Server server = new Server(queuedThreadPool);
+        final Server server = new Server(8080);
+//        ServerConnector http = new ServerConnector(server);
+//        http.setPort(8080);
+//        http.setIdleTimeout(30000);
+//        http.setAcceptQueueSize(5000);
+//        server.addConnector(http);
 
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         server.setHandler(context);
@@ -39,9 +42,16 @@ public class CascadingFailureServer {
 
             @Override
             protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+//                try (PrintWriter out = resp.getWriter()) {
+//                    out.println("call: " + httpClient.target(TARGET_URL + req.getParameter("sleep")).request().get().readEntity(String.class));
+//                }
                 try (PrintWriter out = resp.getWriter()) {
-                    out.println("call: " + httpClient.target(TARGET_URL + req.getParameter("sleep")).request().get().readEntity(String.class));
+                    Thread.sleep (parseInt(req.getParameter("sleep"), 10));
+                    out.println("answer: ok");
+                } catch (InterruptedException ex) {
+                    throw new RuntimeException(ex);
                 }
+                
             }
         }), "/regular");
         context.addServlet(new ServletHolder(new FiberHttpServlet() {
@@ -50,7 +60,12 @@ public class CascadingFailureServer {
             @Override
             protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException, SuspendExecution {
                 try (PrintWriter out = resp.getWriter()) {
-                    out.println("call: " + httpClient.target(TARGET_URL + req.getParameter("sleep")).request().get().readEntity(String.class));
+//                try {
+                    Fiber.sleep (parseInt(req.getParameter("sleep"), 10));
+                    out.println("answer: ok");
+//                    out.println("call: " + httpClient.target(TARGET_URL + req.getParameter("sleep")).request().get().readEntity(String.class));
+                } catch (InterruptedException ex) {
+                    throw new RuntimeException(ex);
                 }
             }
         }), "/fiber");

@@ -6,7 +6,7 @@ fi
 taskname=$1
 shift
 if [ "$#" == "0" ]; then
-	./gradlew -q $taskname
+	./gradlew -q $taskname 
 else
-	./gradlew -q $taskname -Pargs="$*"
+	./gradlew -q $taskname -Pargs="$*" 
 fi
