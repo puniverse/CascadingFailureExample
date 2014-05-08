@@ -19,9 +19,12 @@ import org.eclipse.jetty.util.BlockingArrayQueue;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
 public class CascadingFailureServer {
+    private static final int THREAD_COUNT = 200;
+
     public static void main(String[] args) throws Exception {
-        final BlockingQueue<Runnable> queue = new BlockingArrayQueue<>(200, 200, 9999);
-        QueuedThreadPool queuedThreadPool = new QueuedThreadPool(200,200,60000,queue);
+        int threads = args.length>0 ? parseInt(args[0], THREAD_COUNT):THREAD_COUNT;
+        final BlockingQueue<Runnable> queue = new BlockingArrayQueue<>(threads, threads, 9999);
+        QueuedThreadPool queuedThreadPool = new QueuedThreadPool(threads, threads, 60000, queue);
 
         final Server server = new Server(queuedThreadPool);
 //        final Server server = new Server(8080);

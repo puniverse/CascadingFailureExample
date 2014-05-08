@@ -49,8 +49,8 @@ tasks.withType(JavaExec) {
     // systemProperty 'co.paralleluniverse.fibers.verifyInstrumentation', 'true'
     if(project.hasProperty('args')){
         args project.args.split('\\s+')
-    } else {
-        args "http://localhost:8080","/fiber","5000","1000"
+//    } else {
+//        args "http://localhost:8080","/fiber","5000","1000"
     }
 }
 
