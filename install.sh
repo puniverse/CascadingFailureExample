@@ -25,6 +25,11 @@ net.ipv4.ip_local_port_range = 1024 65535
 EOF
 sudo sh -c "cat sysctl.conf >> /etc/sysctl.conf" 
 sudo sysctl -p /etc/sysctl.conf
+cat > limits.conf <<EOF
+*		hard nofile	200000
+*		soft nofile	200000
+EOF
+sudo sh -c "cat limits.conf >> /etc/security/limits.conf" 
 cd
 
 #project specific scripts
