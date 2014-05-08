@@ -21,7 +21,6 @@ import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager;
 import org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor;
 import org.apache.http.impl.nio.reactor.IOReactorConfig;
 import org.apache.http.nio.reactor.IOReactorException;
-import org.apache.http.nio.reactor.IOReactorExceptionHandler;
 
 public class ClientTesters {
     static final int MAX_CONN = 50000;
@@ -46,30 +45,7 @@ public class ClientTesters {
                 setConnectTimeout(7000).
                 setIoThreadCount(10).
                 setSoTimeout(7000).
-                build()){
-                    
-                    @Override
-                    public void shutdown() throws IOException {
-                        System.out.println("Hiiiiii");
-                        Thread.currentThread().dumpStack();
-                        super.shutdown(); //To change body of generated methods, choose Tools | Templates.
-                    }
-                    
-                };
-//        ioreactor.setExceptionHandler(new IOReactorExceptionHandler() {
-//
-//            @Override
-//            public boolean handle(IOException ex) {
-//                ex.printStackTrace();
-//                return true;
-//            }
-//
-//            @Override
-//            public boolean handle(RuntimeException ex) {
-//                ex.printStackTrace();
-//                return true;
-//            }
-//        });
+                build());
         PoolingNHttpClientConnectionManager mngr = new PoolingNHttpClientConnectionManager(ioreactor);
         mngr.setDefaultMaxPerRoute(MAX_CONN);
         mngr.setMaxTotal(MAX_CONN);
