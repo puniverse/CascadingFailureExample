@@ -1,4 +1,4 @@
-package co.paralleluniverse.examples.comsatjetty;
+
 
 import co.paralleluniverse.common.benchmark.StripedLongTimeSeries;
 import co.paralleluniverse.concurrent.util.ThreadUtil;
