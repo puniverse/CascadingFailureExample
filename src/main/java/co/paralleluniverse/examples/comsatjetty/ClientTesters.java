@@ -24,7 +24,7 @@ import org.apache.http.nio.reactor.IOReactorException;
 import org.apache.http.nio.reactor.IOReactorExceptionHandler;
 
 public class ClientTesters {
-    static final int MAX_CONN = 9000;
+    static final int MAX_CONN = 50000;
     static final int WARMUP = 3;
     static final int DURATION = 10;
 
@@ -56,23 +56,23 @@ public class ClientTesters {
                     }
                     
                 };
-        ioreactor.setExceptionHandler(new IOReactorExceptionHandler() {
-
-            @Override
-            public boolean handle(IOException ex) {
-                ex.printStackTrace();
-                return true;
-            }
-
-            @Override
-            public boolean handle(RuntimeException ex) {
-                ex.printStackTrace();
-                return true;
-            }
-        });
+//        ioreactor.setExceptionHandler(new IOReactorExceptionHandler() {
+//
+//            @Override
+//            public boolean handle(IOException ex) {
+//                ex.printStackTrace();
+//                return true;
+//            }
+//
+//            @Override
+//            public boolean handle(RuntimeException ex) {
+//                ex.printStackTrace();
+//                return true;
+//            }
+//        });
         PoolingNHttpClientConnectionManager mngr = new PoolingNHttpClientConnectionManager(ioreactor);
-        mngr.setDefaultMaxPerRoute(9999);
-        mngr.setMaxTotal(9999);
+        mngr.setDefaultMaxPerRoute(MAX_CONN);
+        mngr.setMaxTotal(MAX_CONN);
 
         final AtomicInteger url1Errors = new AtomicInteger();
         final AtomicInteger url2Errors = new AtomicInteger();
@@ -124,7 +124,7 @@ public class ClientTesters {
                         }
                     } catch (IOException ex) {
                         errorsCounter.incrementAndGet();
-                        ex.printStackTrace();
+//                        ex.printStackTrace();
                     } finally {
                         sem.release();
                         cdl.countDown();
