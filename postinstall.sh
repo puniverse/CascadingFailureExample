@@ -1,9 +1,7 @@
 cat <<EOF
 USAGE: 
-$ sudo bash
-$ ulimit -n 200000
-$ cd $projdir
-$ ./gradlew runServer
-
+$ ./gradlew server
+or
+$ ./gradlew clients http://serveraddres:port /path duration rate
 Enjoy
 EOF
