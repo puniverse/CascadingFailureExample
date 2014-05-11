@@ -41,15 +41,8 @@ public class ClientTesters {
         System.out.println("configuration: " + HOST + " " + URL1 + " " + rate);
 
         final ThreadFactory deamonTF = new ThreadFactoryBuilder().setDaemon(true).build();
-        DefaultConnectingIOReactor ioreactor = new DefaultConnectingIOReactor(IOReactorConfig.custom().
-                setConnectTimeout(7000).
-                setIoThreadCount(10).
-                setSoTimeout(7000).
-                build());
-        PoolingNHttpClientConnectionManager mngr = new PoolingNHttpClientConnectionManager(ioreactor);
-        mngr.setDefaultMaxPerRoute(MAX_CONN);
-        mngr.setMaxTotal(MAX_CONN);
-
+        CloseableHttpAsyncClient ahc = createDefaultHttpAsyncClient();
+        
         final AtomicInteger url1Errors = new AtomicInteger();
         final AtomicInteger url2Errors = new AtomicInteger();
 
@@ -58,9 +51,9 @@ public class ClientTesters {
 
         System.out.println("starting");
         final long start = System.nanoTime();
-        try (CloseableHttpAsyncClient ahc = HttpAsyncClientBuilder.create().setConnectionManager(mngr).build()) {
+//        try (CloseableHttpAsyncClient ahc = HttpAsyncClientBuilder.create().setConnectionManager(mngr).build()) {
 //        try (CloseableHttpAsyncClient ahc = HttpAsyncClientBuilder.create().setMaxConnPerRoute(9999).setMaxConnTotal(9999).build()) {
-            CloseableHttpClient client = new FiberHttpClient(ahc);
+            try(CloseableHttpClient client = new FiberHttpClient(ahc)){
             
             //WARMUP
             call(new HttpGet(URL1), 100, 3, null, null, new AtomicInteger(), MAX_CONN, client, deamonTF).await();
@@ -74,6 +67,19 @@ public class ClientTesters {
             latUrl2.getRecords().forEach(rec -> System.out.println("url2_lat " + TimeUnit.NANOSECONDS.toMillis(rec.timestamp - start) + " " + rec.value));
 //            opendUrl1.getRecords().forEach(rec -> System.out.println("url1_cnt " + TimeUnit.NANOSECONDS.toMillis(rec.timestamp - start) + " " + rec.value));
         }
+    }
+
+    public static CloseableHttpAsyncClient createDefaultHttpAsyncClient() throws IOReactorException {
+        DefaultConnectingIOReactor ioreactor = new DefaultConnectingIOReactor(IOReactorConfig.custom().
+                setConnectTimeout(7000).
+                setIoThreadCount(10).
+                setSoTimeout(7000).
+                build());
+        PoolingNHttpClientConnectionManager mngr = new PoolingNHttpClientConnectionManager(ioreactor);
+        mngr.setDefaultMaxPerRoute(MAX_CONN);
+        mngr.setMaxTotal(MAX_CONN);
+        CloseableHttpAsyncClient ahc = HttpAsyncClientBuilder.create().setConnectionManager(mngr).build();
+        return ahc;
     }
 
     private static CountDownLatch call(
