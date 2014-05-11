@@ -15,6 +15,7 @@ sudo ln -s  /usr/local/java/jdk1.8.0/bin/javac .
 #install git
 sudo apt-get -y install git-core
 
+cd
 cat > sysctl.conf <<EOF
 net.ipv4.tcp_tw_recycle = 1
 net.ipv4.tcp_tw_reuse = 1
