@@ -25,7 +25,7 @@ import org.apache.http.nio.reactor.IOReactorException;
 public class ClientTesters {
     static final int MAX_CONN = 50000;
     static final int WARMUP = 3;
-    static final int DURATION = 10;
+    static final int DURATION = 5;
 
     public static void main(String[] args) throws InterruptedException, IOReactorException, IOException {
         if (args.length < 4) {

@@ -29,12 +29,12 @@ public class CascadingFailureServer {
     private static final int THREAD_COUNT = 200;
 
     public static void main(String[] args) throws Exception {
-        int threads = args.length>0 ? parseInt(args[0], THREAD_COUNT):THREAD_COUNT;
+        int threads = args.length > 0 ? parseInt(args[0], THREAD_COUNT) : THREAD_COUNT;
+        System.out.println("Serving using " + threads + " threads....");
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         Server server = createServer(threads, context);
         FiberHttpClient fiberHttpClient = new FiberHttpClient(ClientTesters.createDefaultHttpAsyncClient());
-        
-        
+
         CloseableHttpClient httpClient = HttpClients.custom().
                 setMaxConnPerRoute(99999).
                 setMaxConnTotal(99999).
@@ -43,9 +43,7 @@ public class CascadingFailureServer {
                         setSocketTimeout(7000).
                         setConnectionRequestTimeout(7000).build()).
                 build();
-        
-        
-        
+
         ResponseHandler<String> handler = new BasicResponseHandler();
         final String TARGET_URL = "http://localhost:8080/target?sleep=";
 
@@ -55,8 +53,8 @@ public class CascadingFailureServer {
             @Override
             protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
                 try (PrintWriter out = resp.getWriter()) {
-                    
-                    out.print("call: "+httpClient.execute(new HttpGet(TARGET_URL + req.getParameter("sleep")),handler));
+
+                    out.print("call: " + httpClient.execute(new HttpGet(TARGET_URL + req.getParameter("sleep")), handler));
 //                }
 //                try (PrintWriter out = resp.getWriter()) {
 //                    Thread.sleep(parseInt(req.getParameter("sleep"), 10));
@@ -73,7 +71,7 @@ public class CascadingFailureServer {
             @Override
             protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException, SuspendExecution {
                 try (PrintWriter out = resp.getWriter()) {
-                    out.print("call: "+fiberHttpClient.execute(new HttpGet(TARGET_URL + req.getParameter("sleep")),handler));
+                    out.print("call: " + fiberHttpClient.execute(new HttpGet(TARGET_URL + req.getParameter("sleep")), handler));
 ////                try {
 //                    Fiber.sleep(parseInt(req.getParameter("sleep"), 10));
 //                    out.println("answer: ok " + new Date().getTime());
@@ -124,8 +122,9 @@ public class CascadingFailureServer {
     }
 
     private static Server createServer(int threads, ServletContextHandler context) {
-        final BlockingQueue<Runnable> queue = new BlockingArrayQueue<>(threads, threads, 99999);
-        QueuedThreadPool queuedThreadPool = new QueuedThreadPool(threads, threads, 60000, queue);
+//        final BlockingQueue<Runnable> queue = new BlockingArrayQueue<>(10, 100, threads);
+//        QueuedThreadPool queuedThreadPool = new QueuedThreadPool(threads, threads, 60000, queue);
+        QueuedThreadPool queuedThreadPool = new QueuedThreadPool(threads, 10);
         final Server server = new Server(queuedThreadPool);
         ServerConnector http = new ServerConnector(server);
         http.setPort(8080);
