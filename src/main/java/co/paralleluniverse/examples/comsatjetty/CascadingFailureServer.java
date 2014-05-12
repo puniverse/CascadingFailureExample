@@ -6,6 +6,7 @@ import co.paralleluniverse.fibers.httpclient.FiberHttpClient;
 import co.paralleluniverse.fibers.servlet.FiberHttpServlet;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.management.ManagementFactory;
 import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 import javax.servlet.ServletException;
@@ -18,6 +19,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.eclipse.jetty.jmx.MBeanContainer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -81,9 +83,9 @@ public class CascadingFailureServer {
                 }
             }
         }), "/fiber");
-        context.addServlet(new ServletHolder(new FiberHttpServlet() {
+        context.addServlet(new ServletHolder(new HttpServlet() {
             @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException, SuspendExecution {
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
                 try (PrintWriter out = resp.getWriter()) {
                     out.println("do nothing. " + new Date().getTime());
                 }
@@ -123,8 +125,8 @@ public class CascadingFailureServer {
 
     private static Server createServer(int threads, ServletContextHandler context) {
 //        final BlockingQueue<Runnable> queue = new BlockingArrayQueue<>(10, 100, threads);
-//        QueuedThreadPool queuedThreadPool = new QueuedThreadPool(threads, threads, 60000, queue);
-        QueuedThreadPool queuedThreadPool = new QueuedThreadPool(threads, 10);
+//        QueuedThreadPool queuedThreadPool = new QueuedThreadPool(threads, 10, 60000, queue);
+        QueuedThreadPool queuedThreadPool = new QueuedThreadPool(threads);
         final Server server = new Server(queuedThreadPool);
         ServerConnector http = new ServerConnector(server);
         http.setPort(8080);
@@ -132,6 +134,12 @@ public class CascadingFailureServer {
         http.setAcceptQueueSize(99999);
         server.addConnector(http);
         server.setHandler(context);
+//        
+//        // Setup JMX
+//        MBeanContainer mbContainer = new MBeanContainer(ManagementFactory.getPlatformMBeanServer());
+//        server.addEventListener(mbContainer);
+////        server.getContainer().addEventListener(mbContainer);
+//        server.addBean(mbContainer);
         return server;
     }
 

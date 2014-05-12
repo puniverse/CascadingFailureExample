@@ -36,6 +36,7 @@ dependencies {
     compile "co.paralleluniverse:comsat-httpclient:$comsatVersion"    
     compile "org.eclipse.jetty:jetty-server:$jettyVersion"
     compile "org.eclipse.jetty:jetty-servlet:$jettyVersion"
+    compile "org.eclipse.jetty:jetty-jmx:$jettyVersion"
     quasar  "co.paralleluniverse:quasar-core:$quasarVersion"
 }
 
@@ -46,18 +47,19 @@ tasks.withType(JavaExec) {
     //    jvmArgs '-Xmx1024m'
     //    jvmArgs "-ea"
     classpath = sourceSets.main.runtimeClasspath   
-    // systemProperty 'co.paralleluniverse.fibers.verifyInstrumentation', 'true'
     if(project.hasProperty('args')){
         args project.args.split('\\s+')
 //    } else {
-//        args "http://localhost:8080","/fiber","5000","1000"
+//        args "http://54.73.179.243:1234","/fiber","5000","50"
     }
+    //        args "http://localhost:8080","/fiber","5000","1000"
+// systemProperty 'co.paralleluniverse.fibers.verifyInstrumentation', 'true'
 }
 
 task(Server, dependsOn: 'classes', type: JavaExec) {
-    main = 'co.paralleluniverse.examples.comsatjetty.CascadingFailureServer'
+main = 'co.paralleluniverse.examples.comsatjetty.CascadingFailureServer'
 }
 task(Clients, dependsOn: 'classes', type: JavaExec) {
-    main = 'co.paralleluniverse.examples.comsatjetty.ClientTesters'
+main = 'co.paralleluniverse.examples.comsatjetty.ClientTesters'
 }
 defaultTasks 'Server'

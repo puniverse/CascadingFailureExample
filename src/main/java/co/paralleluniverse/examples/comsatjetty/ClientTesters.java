@@ -42,7 +42,7 @@ public class ClientTesters {
 
         final ThreadFactory deamonTF = new ThreadFactoryBuilder().setDaemon(true).build();
         CloseableHttpAsyncClient ahc = createDefaultHttpAsyncClient();
-        
+
         final AtomicInteger url1Errors = new AtomicInteger();
         final AtomicInteger url2Errors = new AtomicInteger();
 
@@ -53,15 +53,15 @@ public class ClientTesters {
         final long start = System.nanoTime();
 //        try (CloseableHttpAsyncClient ahc = HttpAsyncClientBuilder.create().setConnectionManager(mngr).build()) {
 //        try (CloseableHttpAsyncClient ahc = HttpAsyncClientBuilder.create().setMaxConnPerRoute(9999).setMaxConnTotal(9999).build()) {
-            try(CloseableHttpClient client = new FiberHttpClient(ahc)){
-            
+        try (CloseableHttpClient client = new FiberHttpClient(ahc)) {
+
             //WARMUP
             call(new HttpGet(URL1), 100, 3, null, null, new AtomicInteger(), MAX_CONN, client, deamonTF).await();
-            
+
             CountDownLatch latch1 = call(new HttpGet(URL1), rate, DURATION, opendUrl1, null, url1Errors, MAX_CONN, client, deamonTF);
             call(new HttpGet(URL2), 5, DURATION, null, latUrl2, url1Errors, MAX_CONN, client, deamonTF).await();
             latch1.await();
-            
+
             System.out.println("url1Errors " + url1Errors);
             System.out.println("url2Errors " + url2Errors);
             latUrl2.getRecords().forEach(rec -> System.out.println("url2_lat " + TimeUnit.NANOSECONDS.toMillis(rec.timestamp - start) + " " + rec.value));
@@ -96,20 +96,27 @@ public class ClientTesters {
                 if (sem.availablePermits() == 0)
                     System.out.println("waiting...");
                 sem.acquireUninterruptibly();
+//                if (openedCountSeries != null)
+//                    System.out.println(">" + (maxOpen - sem.availablePermits()));
                 new Fiber<Void>(() -> {
                     long reqStart = System.nanoTime();
                     try (CloseableHttpResponse resp = client.execute(httpGet)) {
                         long millis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - reqStart);
                         if (resp.getStatusLine().getStatusCode() == 200) {
+//                            if (millis > 1000)
+//                                System.out.println("millis " + millis);
                             if (latancySeries != null)
                                 latancySeries.record(reqStart, millis);
                         }
                     } catch (IOException ex) {
+//                        System.out.println(ex);
                         errorsCounter.incrementAndGet();
 //                        ex.printStackTrace();
                     } finally {
                         sem.release();
                         cdl.countDown();
+//                        if (openedCountSeries != null)
+//                            System.out.println("<" + (maxOpen - sem.availablePermits()));
                     }
                 }).start();
             }
