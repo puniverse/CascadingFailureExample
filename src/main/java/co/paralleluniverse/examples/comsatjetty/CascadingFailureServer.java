@@ -6,9 +6,7 @@ import co.paralleluniverse.fibers.httpclient.FiberHttpClient;
 import co.paralleluniverse.fibers.servlet.FiberHttpServlet;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.management.ManagementFactory;
 import java.util.Date;
-import java.util.concurrent.BlockingQueue;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -19,12 +17,10 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.eclipse.jetty.jmx.MBeanContainer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.util.BlockingArrayQueue;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
 public class CascadingFailureServer {
@@ -96,8 +92,8 @@ public class CascadingFailureServer {
             protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException, SuspendExecution {
                 try (PrintWriter out = resp.getWriter()) {
                     int sleeptime = parseInt(req.getParameter("sleep"), 10);
-                    out.println("sleeping " + sleeptime + "ms starting now: " + new Date().getTime() + " \n");
                     Fiber.sleep(sleeptime);
+                    out.println("sleeping " + sleeptime + "ms starting now: " + new Date().getTime() + " \n");
                 } catch (InterruptedException ex) {
                     throw new RuntimeException(ex);
                 }
