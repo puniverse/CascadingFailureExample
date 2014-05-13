@@ -24,9 +24,10 @@ import org.apache.http.impl.nio.reactor.IOReactorConfig;
 import org.apache.http.nio.reactor.IOReactorException;
 
 public class ClientTesters {
+    private static final int TIMEOUT = 30000;
     static final int MAX_CONN = 50000;
     static final int WARMUP = 3;
-    static final int DURATION = 5;
+    static final int DURATION = 20;
 
     public static void main(String[] args) throws InterruptedException, IOReactorException, IOException {
         if (args.length < 4) {
@@ -75,9 +76,9 @@ public class ClientTesters {
 
     public static CloseableHttpAsyncClient createDefaultHttpAsyncClient() throws IOReactorException {
         DefaultConnectingIOReactor ioreactor = new DefaultConnectingIOReactor(IOReactorConfig.custom().
-                setConnectTimeout(7000).
+                setConnectTimeout(TIMEOUT).
                 setIoThreadCount(10).
-                setSoTimeout(7000).
+                setSoTimeout(TIMEOUT).
                 build());
         PoolingNHttpClientConnectionManager mngr = new PoolingNHttpClientConnectionManager(ioreactor);
         mngr.setDefaultMaxPerRoute(MAX_CONN);
