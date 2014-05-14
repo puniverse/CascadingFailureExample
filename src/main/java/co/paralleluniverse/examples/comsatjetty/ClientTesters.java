@@ -62,8 +62,8 @@ public class ClientTesters {
 
             System.out.println("starting..");
             final long start = System.nanoTime();
-            CountDownLatch latch1 = call(new HttpGet(URL1), rate, DURATION, opendUrl1, null, errors, MAX_CONN, client, deamonTF);
-            call(new HttpGet(URL2), 5, DURATION, null, latUrl2, errors, MAX_CONN, client, deamonTF).await();
+            CountDownLatch latch1 = call(new HttpGet(URL1), rate, DURATION, opendUrl1, latUrl2, errors, MAX_CONN, client, deamonTF);
+//            call(new HttpGet(URL2), 5, DURATION, null, latUrl2, errors, MAX_CONN, client, deamonTF).await();
             latch1.await();
 
             latUrl2.getRecords().forEach(rec -> System.out.println("url2_lat " + TimeUnit.NANOSECONDS.toMillis(rec.timestamp - start) + " " + rec.value));
