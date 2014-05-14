@@ -4,9 +4,14 @@ import co.paralleluniverse.fibers.Fiber;
 import co.paralleluniverse.fibers.SuspendExecution;
 import co.paralleluniverse.fibers.httpclient.FiberHttpClient;
 import co.paralleluniverse.fibers.servlet.FiberHttpServlet;
+import com.codahale.metrics.ConsoleReporter;
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -122,7 +127,34 @@ public class CascadingFailureServer {
     private static Server createServer(int threads, ServletContextHandler context) {
 //        final BlockingQueue<Runnable> queue = new BlockingArrayQueue<>(10, 100, threads);
 //        QueuedThreadPool queuedThreadPool = new QueuedThreadPool(threads, 10, 60000, queue);
-        QueuedThreadPool queuedThreadPool = new QueuedThreadPool(threads);
+        final MetricRegistry metrics = new MetricRegistry();
+        ConsoleReporter.forRegistry(metrics).build().start(2, TimeUnit.SECONDS);
+        final Timer execute = metrics.timer("execute");
+        final Timer jobrun = metrics.timer("jobrun");
+
+        final QueuedThreadPool queuedThreadPool = new QueuedThreadPool(threads) {
+
+            @Override
+            public void execute(Runnable job) {
+//                StringBuilder sb = new StringBuilder();
+//                sb.append("exec:").append('\n');                
+//                Arrays.asList(Thread.currentThread().getStackTrace()).stream().forEach(st->sb.append("\t").append(st.toString()).append('\n'));
+//                final long start = System.nanoTime();
+                Timer.Context time = execute.time();
+                super.execute(() -> {
+//                    sb.append("time is ").append(TimeUnit.NANOSECONDS.toMicros(System.nanoTime()-start));
+//                    System.out.println(sb.toString());
+                    time.stop();
+                    Timer.Context jobruntimer = jobrun.time();
+                    job.run();
+                    jobruntimer.stop();
+                }); //To change body of generated methods, choose Tools | Templates.
+            }
+
+        };
+
+        metrics.register("waiting jobs", (Gauge<Integer>) () -> queuedThreadPool.getQueueSize());
+        metrics.register("threads num", (Gauge<Integer>) () -> queuedThreadPool.getThreads());
         final Server server = new Server(queuedThreadPool);
         ServerConnector http = new ServerConnector(server);
         http.setPort(8080);
