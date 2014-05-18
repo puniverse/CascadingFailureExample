@@ -4,13 +4,17 @@ import co.paralleluniverse.fibers.Fiber;
 import co.paralleluniverse.fibers.SuspendExecution;
 import co.paralleluniverse.fibers.httpclient.FiberHttpClient;
 import co.paralleluniverse.fibers.servlet.FiberHttpServlet;
+import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.Field;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -21,6 +25,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.eclipse.jetty.server.HttpConnection;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -97,9 +102,9 @@ public class CascadingFailureServer {
         context.addServlet(new ServletHolder(new FiberHttpServlet() {
             @Override
             protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException, SuspendExecution {
-                int get = ai.incrementAndGet();
-                if (get%100==0)
-                    System.out.println(new Date()+": "+get);
+//                int get = ai.incrementAndGet();
+//                if (get % 100 == 0)
+//                    System.out.println(new Date() + ": " + get);
                 try {//(PrintWriter out = resp.getWriter()) {
                     int sleeptime = parseInt(req.getParameter("sleep"), 10);
                     Fiber.sleep(sleeptime);
@@ -133,27 +138,36 @@ public class CascadingFailureServer {
 //        final BlockingQueue<Runnable> queue = new BlockingArrayQueue<>(10, 100, threads);
 //        QueuedThreadPool queuedThreadPool = new QueuedThreadPool(threads, 10, 60000, queue);
         final Timer execute = metrics.timer("execute");
-//        final Timer jobrun = metrics.timer("jobrun");
+        final Timer jobrun = metrics.timer("jobrun");
 
+
+        // Use this in order to measure delay times in the queue
         final QueuedThreadPool queuedThreadPool = new QueuedThreadPool(threads) {
             AtomicInteger ai2 = new AtomicInteger();
 
             @Override
             public void execute(Runnable job) {
-//                StringBuilder sb = new StringBuilder();
-//                sb.append("exec:").append('\n');                
-//                Arrays.asList(Thread.currentThread().getStackTrace()).stream().forEach(st->sb.append("\t").append(st.toString()).append('\n'));
-//                final long start = System.nanoTime();
-//                System.out.println(job.getClass().getName());
-//                new UnsupportedOperationException().printStackTrace();
-                final long start = System.nanoTime();
-//                int get = ai2.incrementAndGet();
-//                if (get%2000==0)
-//                    System.out.println("2: "+new Date()+": "+get);
+                Timer.Context executeCtx = execute.time();
+//                final StackTraceElement[] st = Thread.currentThread().getStackTrace();
                 super.execute(() -> {
-                    if (ai2.incrementAndGet() % 1000 == 0)
-                        System.out.println("2: "+new Date()+" "+ai2+" "+TimeUnit.NANOSECONDS.toMillis(System.nanoTime()-start));
+                    Timer.Context runCtx = jobrun.time();
                     job.run();
+                    try {
+                        if (job.getClass().getName().equals("org.eclipse.jetty.io.AbstractConnection$2")) {
+                            Field f = job.getClass().getDeclaredField("this$0");
+                            if (f != null && f.getType().isAssignableFrom(HttpConnection.class)) {
+                                f.setAccessible(true);
+                                HttpConnection conn = (HttpConnection) f.get(job);
+                                String pathInfo = conn.getHttpChannel().getRequest().getPathInfo();
+                                if ("/target".equals(pathInfo)) {
+                                    executeCtx.stop();
+                                    runCtx.stop();
+                                }
+                            }
+                        }
+                    } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException ex) {
+                        Logger.getLogger(CascadingFailureServer.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 });
             }
 
@@ -161,7 +175,7 @@ public class CascadingFailureServer {
 
 //        metrics.register("waiting jobs", (Gauge<Integer>) () -> queuedThreadPool.getQueueSize());
 //        metrics.register("threads num", (Gauge<Integer>) () -> queuedThreadPool.getThreads());
-        final Server server = new Server(queuedThreadPool);
+        final Server server = new Server(new QueuedThreadPool(threads));//queuedThreadPool);
         ServerConnector http = new ServerConnector(server);
         http.setPort(8080);
         http.setIdleTimeout(30000);

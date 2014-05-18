@@ -29,7 +29,7 @@ import org.apache.http.nio.reactor.IOReactorException;
 
 public class ClientTesters {
     private static final int TIMEOUT = 60000;
-    static final int MAX_CONN = 50000;
+    static final int MAX_CONN = 150000;
     static final int WARMUP = 3;
     static final int DURATION = 20;
     public static MetricRegistry metrics = new MetricRegistry();
