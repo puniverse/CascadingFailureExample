@@ -31,6 +31,11 @@ configurations.all {
 }
 
 dependencies {
+    compile "org.slf4j:slf4j-api:1.7.7"
+    //  runtime "org.slf4j:slf4j-jdk14:1.7.7"
+    runtime "org.apache.logging.log4j:log4j-slf4j-impl:2.0-rc1"
+    runtime "org.apache.logging.log4j:log4j-api:2.0-rc1"
+    runtime "org.apache.logging.log4j:log4j-core:2.0-rc1"
     compile "co.paralleluniverse:quasar-core:$quasarVersion"
     compile "co.paralleluniverse:comsat-servlet:$comsatVersion"
     compile "co.paralleluniverse:comsat-httpclient:$comsatVersion"    

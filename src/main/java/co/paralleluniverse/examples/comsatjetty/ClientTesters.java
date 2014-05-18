@@ -3,10 +3,14 @@ package co.paralleluniverse.examples.comsatjetty;
 import co.paralleluniverse.common.benchmark.StripedLongTimeSeries;
 import co.paralleluniverse.fibers.Fiber;
 import co.paralleluniverse.fibers.httpclient.FiberHttpClient;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Snapshot;
+import com.codahale.metrics.Timer;
 import com.google.common.util.concurrent.RateLimiter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
@@ -24,10 +28,11 @@ import org.apache.http.impl.nio.reactor.IOReactorConfig;
 import org.apache.http.nio.reactor.IOReactorException;
 
 public class ClientTesters {
-    private static final int TIMEOUT = 30000;
+    private static final int TIMEOUT = 60000;
     static final int MAX_CONN = 50000;
     static final int WARMUP = 3;
     static final int DURATION = 20;
+    public static MetricRegistry metrics = new MetricRegistry();
 
     public static void main(String[] args) throws InterruptedException, IOReactorException, IOException {
         if (args.length < 4) {
@@ -43,7 +48,6 @@ public class ClientTesters {
         final String URL2 = HOST + "/simple";
         final int rate = Integer.parseInt(args[3]);
         System.out.println("configuration: " + HOST + " " + URL1 + " " + rate);
-
         final ThreadFactory deamonTF = new ThreadFactoryBuilder().setDaemon(true).build();
         CloseableHttpAsyncClient ahc = createDefaultHttpAsyncClient();
 
@@ -58,15 +62,16 @@ public class ClientTesters {
         try (CloseableHttpClient client = new FiberHttpClient(ahc)) {
 
             System.out.println("warming up..");
-            call(new HttpGet(URL1), 100, 3, null, null, null, MAX_CONN, client, deamonTF).await();
+            call(new HttpGet(URL2), 500, 5, null, null, null, MAX_CONN, client, deamonTF).await();
+            Thread.sleep(10000);
 
-            System.out.println("starting..");
+            System.out.println(new Date()+" starting..");
             final long start = System.nanoTime();
             CountDownLatch latch1 = call(new HttpGet(URL1), rate, DURATION, opendUrl1, latUrl2, errors, MAX_CONN, client, deamonTF);
 //            call(new HttpGet(URL2), 5, DURATION, null, latUrl2, errors, MAX_CONN, client, deamonTF).await();
             latch1.await();
 
-            latUrl2.getRecords().forEach(rec -> System.out.println("url2_lat " + TimeUnit.NANOSECONDS.toMillis(rec.timestamp - start) + " " + rec.value));
+//            latUrl2.getRecords().forEach(rec -> System.out.println("url2_lat " + TimeUnit.NANOSECONDS.toMillis(rec.timestamp - start) + " " + rec.value));
             errors.entrySet().stream().forEach(p -> {
                 System.out.println(p.getKey() + " " + p.getValue());
             });
@@ -92,6 +97,8 @@ public class ClientTesters {
             final ConcurrentHashMap<String, AtomicInteger> errorsCounters, final int maxOpen, final CloseableHttpClient client, final ThreadFactory deamonTF) {
         int num = duration * rate;
         int tenth = num / 10;
+        Timer httpTimer = metrics.timer(httpGet.getURI().toString() + rate);
+        Timer fiberTimer = metrics.timer("fiber"+httpGet.getURI().toString() + rate);
         CountDownLatch cdl = new CountDownLatch(num);
         Semaphore sem = new Semaphore(maxOpen);
         Thread url1Thread = deamonTF.newThread(() -> {
@@ -99,25 +106,29 @@ public class ClientTesters {
 
             for (int i = 0, j = 0; i < num; i++) {
                 rl.acquire();
+                Timer.Context fiberCtx = fiberTimer.time();
                 if (openedCountSeries != null)
                     openedCountSeries.record(System.nanoTime(), maxOpen - sem.availablePermits());
                 if (sem.availablePermits() == 0)
-                    System.out.println("waiting...");
+                    System.out.println(new Date() + " waiting...");
                 sem.acquireUninterruptibly();
-                if (openedCountSeries != null && i % tenth == 0)
-                    System.out.println("sent " + i / tenth * 10 + "%...");
+                int k=i+1;
+                if (openedCountSeries != null && k % tenth == 0)
+                    System.out.println(new Date() + " sent("+k+") " + k / tenth * 10 + "%...");
 
 //                if (openedCountSeries != null)
 //                    System.out.println(">" + (maxOpen - sem.availablePermits()));
                 new Fiber<Void>(() -> {
+                    fiberCtx.stop();
                     long reqStart = System.nanoTime();
+                    final Timer.Context ctx = httpTimer.time();
                     try (CloseableHttpResponse resp = client.execute(httpGet)) {
                         long millis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - reqStart);
                         if (resp.getStatusLine().getStatusCode() == 200) {
 //                            if (millis > 1000)
 //                                System.out.println("millis " + millis);
-                            if (latancySeries != null)
-                                latancySeries.record(reqStart, millis);
+//                            if (latancySeries != null)
+//                                latancySeries.record(reqStart, millis);
                         }
                     } catch (IOException ex) {
                         if (errorsCounters != null) {
@@ -127,9 +138,14 @@ public class ClientTesters {
                     } finally {
                         sem.release();
                         cdl.countDown();
-                        if (openedCountSeries != null && (num - cdl.getCount()) % tenth == 0)
+                        ctx.stop();
+                        long count = num - cdl.getCount();
+                        if (openedCountSeries != null && (count) % tenth == 0) {
 //                            System.out.println("dd "+ (num-cdl.getCount()) + " : "+ tenth + " : "+(num-cdl.getCount()% tenth));
-                            System.out.println("responeded " + ((num - cdl.getCount()) / tenth * 10) + "%...");
+                            System.out.print(new Date() + " responeded ("+count+") " + ((count) / tenth * 10) + "%...");
+                            System.out.println(" " + httpTimer.getSnapshot().getMean()+" "+fiberTimer.getSnapshot().getMean());
+                        }
+
 //                        }
 //                        if (openedCountSeries != null)
 //                            System.out.println("<" + (maxOpen - sem.availablePermits()));
