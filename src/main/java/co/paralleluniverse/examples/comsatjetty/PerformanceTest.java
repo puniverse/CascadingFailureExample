@@ -3,6 +3,7 @@ package co.paralleluniverse.examples.comsatjetty;
 import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -24,6 +25,7 @@ public class PerformanceTest {
         Counter acceptCounter = metrics.counter("accept");
         Counter readCounter = metrics.counter("READ");
         Counter dataCounter = metrics.counter("DATA");
+//        Timer timer = metrics.timer("select");
 
         ByteBuffer buffer = ByteBuffer.allocate(1024);
         Selector selector = Selector.open();
@@ -61,17 +63,18 @@ public class PerformanceTest {
                             dataCounter.inc();
                             buffer.flip();
                             String line = new String(buffer.array(), buffer.position(), buffer.remaining());
-//                            System.out.println(line);
-                            if (line.startsWith("CLOSE")) {
-                                client.close();
-                            } else if (line.startsWith("QUIT")) {
-                                for (SelectionKey k : selector.keys()) {
-                                    k.cancel();
-                                    k.channel().close();
-                                }
-                                selector.close();
-                                return;
-                            }
+                            System.out.println(line);
+                            client.close();
+//                            if (line.startsWith("CLOSE")) {
+//                                client.close();
+//                            } else if (line.startsWith("QUIT")) {
+//                                for (SelectionKey k : selector.keys()) {
+//                                    k.cancel();
+//                                    k.channel().close();
+//                                }
+//                                selector.close();
+//                                return;
+//                            }
                         } else {
                             key.cancel();
                         }

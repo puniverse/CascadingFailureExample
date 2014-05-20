@@ -53,6 +53,7 @@ tasks.withType(JavaExec) {
     jvmArgs "-javaagent:${configurations.quasar.iterator().next()}" // =v, =d
     jvmArgs '-server'
     jvmArgs "-XX:+UnlockCommercialFeatures","-XX:+FlightRecorder"
+//    jvmArgs "-XX:StartFlightRecording=duration=60s,filename=myrecording.jfr"
     //    jvmArgs '-Xmx1024m'
     //    jvmArgs "-ea"
     classpath = sourceSets.main.runtimeClasspath   
@@ -74,7 +75,10 @@ task(Server, dependsOn: 'classes', type: JavaExec) {
 task(Clients, dependsOn: 'classes', type: JavaExec) {
     main = 'co.paralleluniverse.examples.comsatjetty.ClientTesters'
 }
-task(Perf, dependsOn: 'classes', type: JavaExec) {
+task(PerfServ, dependsOn: 'classes', type: JavaExec) {
     main = 'co.paralleluniverse.examples.comsatjetty.PerformanceTest'
+}
+task(PerfCli, dependsOn: 'classes', type: JavaExec) {
+    main = 'co.paralleluniverse.examples.comsatjetty.PerfClient'
 }
 defaultTasks 'Server'
