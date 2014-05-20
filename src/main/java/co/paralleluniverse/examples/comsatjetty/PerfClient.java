@@ -16,32 +16,32 @@ import java.util.concurrent.TimeUnit;
 public class PerfClient {
     static String message = "Sending a test message";
 
-    public static void main(String[] args) throws IOException {
-                final MetricRegistry metrics = new MetricRegistry();
+    public static void main(String[] args) throws IOException, InterruptedException {
+        final MetricRegistry metrics = new MetricRegistry();
         ConsoleReporter.forRegistry(metrics).build().start(1, TimeUnit.SECONDS);
         Counter connectedCounter = metrics.counter("connected");
 
-        String host = args.length>0 ? args[0] : "127.0.0.1";
-        int rate = args.length>1 ? Integer.parseInt(args[1]) : 10;
+        String host = args.length > 0 ? args[0] : "127.0.0.1";
+        double rate = args.length > 1 ? Double.parseDouble(args[1]) : 2;
         int micros = (int) (1e6 / rate);
-        
+        System.out.println("CONF: " + host + " " + micros);
+
         try (Selector selector = Selector.open()) {
             Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> {
                 try {
-                    SocketChannel channel;
-                    channel = SocketChannel.open();
+                    SocketChannel channel = SocketChannel.open();
                     channel.configureBlocking(false);
-
                     channel.register(selector, SelectionKey.OP_CONNECT);
-                    channel.connect(new InetSocketAddress(host , 8080));
+                    channel.connect(new InetSocketAddress(host, 8080));
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    e.printStackTrace();
+//                    throw new RuntimeException(e);
                 }
             }, 0, micros, TimeUnit.MICROSECONDS);
-
+            Thread.sleep(100);
             while (!Thread.interrupted()) {
 
-                selector.select();
+                selector.select(1000);
 
                 Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
 
@@ -106,5 +106,4 @@ public class PerfClient {
         // lets get ready to read.
         key.interestOps(SelectionKey.OP_READ);
     }
- }
-
+}
