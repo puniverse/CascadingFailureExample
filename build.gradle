@@ -42,6 +42,10 @@ dependencies {
     compile "org.eclipse.jetty:jetty-server:$jettyVersion"
     compile "org.eclipse.jetty:jetty-servlet:$jettyVersion"
     quasar  "co.paralleluniverse:quasar-core:$quasarVersion"
+    compile 'io.undertow:undertow-core:1.0.12.Final'
+    compile 'io.undertow:undertow-servlet:1.0.12.Final'
+    compile 'io.undertow:undertow-websockets-jsr:1.0.12.Final'
+    compile 'io.undertow:undertow-examples:1.0.12.Final'
 }
 
 tasks.withType(JavaExec) {

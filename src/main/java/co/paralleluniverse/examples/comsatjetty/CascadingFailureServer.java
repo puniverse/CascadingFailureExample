@@ -10,6 +10,7 @@ import com.codahale.metrics.Timer;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
+import java.nio.channels.spi.SelectorProvider;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -38,6 +39,7 @@ public class CascadingFailureServer {
     public static AtomicInteger ai = new AtomicInteger();
 
     public static void main(String[] args) throws Exception {
+        System.out.println("Selector: "+SelectorProvider.provider());
 //        ConsoleReporter.forRegistry(metrics).build().start(2, TimeUnit.SECONDS);
         int threads = args.length > 0 ? parseInt(args[0], THREAD_COUNT) : THREAD_COUNT;
         System.out.println("Serving using " + threads + " threads....");
