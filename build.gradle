@@ -74,4 +74,7 @@ task(Server, dependsOn: 'classes', type: JavaExec) {
 task(Clients, dependsOn: 'classes', type: JavaExec) {
     main = 'co.paralleluniverse.examples.comsatjetty.ClientTesters'
 }
+task(Perf, dependsOn: 'classes', type: JavaExec) {
+    main = 'co.paralleluniverse.examples.comsatjetty.PerformanceTest'
+}
 defaultTasks 'Server'

@@ -61,9 +61,9 @@ public class ClientTesters {
 //        try (CloseableHttpAsyncClient ahc = HttpAsyncClientBuilder.create().setMaxConnPerRoute(9999).setMaxConnTotal(9999).build()) {
         try (CloseableHttpClient client = new FiberHttpClient(ahc)) {
 
-            System.out.println("warming up..");
-            call(new HttpGet(URL2), 500, 5, null, null, null, MAX_CONN, client, deamonTF).await();
-            Thread.sleep(10000);
+//            System.out.println("warming up..");
+//            call(new HttpGet(URL2), 500, 5, null, null, null, MAX_CONN, client, deamonTF).await();
+//            Thread.sleep(10000);
 
             System.out.println(new Date()+" starting..");
             final long start = System.nanoTime();
