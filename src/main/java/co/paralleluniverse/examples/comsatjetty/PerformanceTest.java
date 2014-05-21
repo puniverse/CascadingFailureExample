@@ -63,7 +63,7 @@ public class PerformanceTest {
                             dataCounter.inc();
                             buffer.flip();
                             String line = new String(buffer.array(), buffer.position(), buffer.remaining());
-                            System.out.println(line);
+//                            System.out.println(line);
                             client.close();
 //                            if (line.startsWith("CLOSE")) {
 //                                client.close();

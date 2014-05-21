@@ -53,8 +53,9 @@ tasks.withType(JavaExec) {
     jvmArgs "-javaagent:${configurations.quasar.iterator().next()}" // =v, =d
     jvmArgs '-server'
     jvmArgs "-XX:+UnlockCommercialFeatures","-XX:+FlightRecorder"
-//    jvmArgs "-XX:StartFlightRecording=duration=60s,filename=myrecording.jfr"
-    //    jvmArgs '-Xmx1024m'
+//    jvmArgs "-XX:StartFlightRecording=duration=60s,filename=myrecording.jfr,settings=ProfilingHeap.jfc"
+    jvmArgs '-Xmx4096m'
+    jvmArgs "-XX:+UseG1GC","-XX:MaxGCPauseMillis=200"
     //    jvmArgs "-ea"
     classpath = sourceSets.main.runtimeClasspath   
     if(project.hasProperty('args')){

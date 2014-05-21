@@ -177,7 +177,7 @@ public class CascadingFailureServer {
 
 //        metrics.register("waiting jobs", (Gauge<Integer>) () -> queuedThreadPool.getQueueSize());
 //        metrics.register("threads num", (Gauge<Integer>) () -> queuedThreadPool.getThreads());
-        final Server server = new Server(new QueuedThreadPool(threads));//queuedThreadPool);
+        final Server server = new Server(queuedThreadPool);
         ServerConnector http = new ServerConnector(server);
         http.setPort(8080);
         http.setIdleTimeout(30000);
