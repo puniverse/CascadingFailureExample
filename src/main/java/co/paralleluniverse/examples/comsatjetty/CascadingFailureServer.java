@@ -39,7 +39,7 @@ public class CascadingFailureServer {
 //        final Timer jobrun = metrics.timer("jobrun");
 
         // Use this in order to measure delay times in the queue
-        final QueuedThreadPool queuedThreadPool = new QueuedThreadPool(threads) {
+        final QueuedThreadPool queuedThreadPool = new QueuedThreadPool(threads,threads) {
 //            AtomicInteger ai2 = new AtomicInteger();
 //
 //            @Override
