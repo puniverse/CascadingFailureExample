@@ -1,13 +1,14 @@
 package co.paralleluniverse.examples.comsatjetty;
 
+import co.paralleluniverse.fibers.httpclient.FiberHttpClientBuilder;
 import co.paralleluniverse.fibers.SuspendExecution;
-import co.paralleluniverse.fibers.httpclient.FiberHttpClient;
 import co.paralleluniverse.fibers.servlet.FiberHttpServlet;
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -15,10 +16,16 @@ import org.apache.http.impl.client.CloseableHttpClient;
 public class FiberRoutingServlet extends FiberHttpServlet {
     private final CloseableHttpClient httpClient;
     private final BasicResponseHandler basicResponseHandler;
-
+    
     public FiberRoutingServlet() {
-        httpClient = new FiberHttpClient(ClientTesters.createDefaultHttpAsyncClient(null));
-
+        httpClient  = FiberHttpClientBuilder.create().
+                setMaxConnPerRoute(CascadingFailureServer.MAX_CONN).
+                setMaxConnTotal(CascadingFailureServer.MAX_CONN).
+                setDefaultRequestConfig(RequestConfig.custom().
+//                        setLocalAddress(null).
+                        setConnectTimeout(CascadingFailureServer.TIMEOUT).
+                        setSocketTimeout(CascadingFailureServer.TIMEOUT).
+                        setConnectionRequestTimeout(CascadingFailureServer.TIMEOUT).build()).build();
         basicResponseHandler = new BasicResponseHandler();
     }
 

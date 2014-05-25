@@ -10,21 +10,21 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 public class RoutingServlet extends HttpServlet {
     private final CloseableHttpClient httpClient;
     private final BasicResponseHandler basicResponseHandler;
 
     public RoutingServlet() {
-        httpClient = HttpClients.custom().
-                setMaxConnPerRoute(99999).
-                setMaxConnTotal(99999).
+        httpClient = HttpClientBuilder.create().
+                setMaxConnPerRoute(CascadingFailureServer.MAX_CONN).
+                setMaxConnTotal(CascadingFailureServer.MAX_CONN).
                 setDefaultRequestConfig(RequestConfig.custom().
-                        setConnectTimeout(7000).
-                        setSocketTimeout(7000).
-                        setConnectionRequestTimeout(7000).build()).
-                build();
+//                        setLocalAddress(null).
+                        setConnectTimeout(CascadingFailureServer.TIMEOUT).
+                        setSocketTimeout(CascadingFailureServer.TIMEOUT).
+                        setConnectionRequestTimeout(CascadingFailureServer.TIMEOUT).build()).build();
         basicResponseHandler = new BasicResponseHandler();
     }
 

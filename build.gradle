@@ -52,8 +52,8 @@ tasks.withType(JavaExec) {
     main = mainClass
     jvmArgs "-javaagent:${configurations.quasar.iterator().next()}" // =v, =d
     jvmArgs '-server'
-    jvmArgs "-XX:+UnlockCommercialFeatures","-XX:+FlightRecorder"
-    jvmArgs "-XX:StartFlightRecording=duration=30s,delay=2s,filename=myrecording.jfr,settings=ProfilingHeap.jfc"
+//    jvmArgs "-XX:+UnlockCommercialFeatures","-XX:+FlightRecorder"
+//    jvmArgs "-XX:StartFlightRecording=duration=30s,delay=2s,filename=myrecording.jfr,settings=ProfilingHeap.jfc"
     jvmArgs '-Xmx4096m'
     jvmArgs "-XX:+UseG1GC","-XX:MaxGCPauseMillis=200"
     //    jvmArgs "-ea"
@@ -78,13 +78,13 @@ tasks.withType(JavaExec) {
 task(Server, dependsOn: 'classes', type: JavaExec) {
     main = 'co.paralleluniverse.examples.comsatjetty.CascadingFailureServer'
 }
-task(Clients, dependsOn: 'classes', type: JavaExec) {
-    main = 'co.paralleluniverse.examples.comsatjetty.ClientTesters'
-}
-task(PerfServ, dependsOn: 'classes', type: JavaExec) {
-    main = 'co.paralleluniverse.examples.comsatjetty.PerformanceTest'
-}
-task(PerfCli, dependsOn: 'classes', type: JavaExec) {
-    main = 'co.paralleluniverse.examples.comsatjetty.PerfClient'
-}
+//task(Clients, dependsOn: 'classes', type: JavaExec) {
+//    main = 'co.paralleluniverse.examples.comsatjetty.ClientTesters'
+//}
+//task(PerfServ, dependsOn: 'classes', type: JavaExec) {
+//    main = 'co.paralleluniverse.examples.comsatjetty.PerformanceTest'
+//}
+//task(PerfCli, dependsOn: 'classes', type: JavaExec) {
+//    main = 'co.paralleluniverse.examples.comsatjetty.PerfClient'
+//}
 defaultTasks 'Server'

@@ -57,14 +57,6 @@ public class ClientTesters {
         final StripedLongTimeSeries opendUrl1 = new StripedLongTimeSeries(100000, false);
         final StripedLongTimeSeries latUrl2 = new StripedLongTimeSeries(100000, false);
 
-//        try (CloseableHttpAsyncClient ahc = HttpAsyncClientBuilder.create().setConnectionManager(mngr).build()) {
-//        try (CloseableHttpAsyncClient ahc = HttpAsyncClientBuilder.create().setMaxConnPerRoute(9999).setMaxConnTotal(9999).build()) {
-//        InetAddress[] addresses = new InetAddress[6];
-//        for (int i = 0; i < addresses.length; i++)
-//            addresses[i] = new InetSocketAddress(URL2, i);InetAddress.getByName("192.168.1."+(i+1));
-//        CloseableHttpClient[] clients = new CloseableHttpClient[addresses.length];
-//        for (int i = 0; i < clients.length; i++)
-//            clients[i] = new FiberHttpClient(createDefaultHttpAsyncClient(addresses[i]));
         try (CloseableHttpClient client = new FiberHttpClient(createDefaultHttpAsyncClient(null))) {
             System.out.println("warming up..");
             call(new HttpGet(URL2), rate, 5, null, null, null, MAX_CONN, client, deamonTF).await();
