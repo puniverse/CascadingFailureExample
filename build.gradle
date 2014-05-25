@@ -53,7 +53,7 @@ tasks.withType(JavaExec) {
     jvmArgs "-javaagent:${configurations.quasar.iterator().next()}" // =v, =d
     jvmArgs '-server'
     jvmArgs "-XX:+UnlockCommercialFeatures","-XX:+FlightRecorder"
-//    jvmArgs "-XX:StartFlightRecording=duration=60s,filename=myrecording.jfr,settings=ProfilingHeap.jfc"
+    jvmArgs "-XX:StartFlightRecording=duration=30s,delay=2s,filename=myrecording.jfr,settings=ProfilingHeap.jfc"
     jvmArgs '-Xmx4096m'
     jvmArgs "-XX:+UseG1GC","-XX:MaxGCPauseMillis=200"
     //    jvmArgs "-ea"
@@ -68,6 +68,11 @@ tasks.withType(JavaExec) {
     //    systemProperty 'com.Fsun.management.jmxremote.authenticate','false'
     //    systemProperty 'com.sun.management.jmxremote.ssl','false'
     // systemProperty 'co.paralleluniverse.fibers.verifyInstrumentation', 'true'
+//    systemProperty "org.apache.commons.logging.Log","org.apache.commons.logging.impl.SimpleLog"
+//    systemProperty "org.apache.commons.logging.simplelog.showdatetime","true"
+////    systemProperty "org.apache.commons.logging.simplelog.log.org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager","DEBUG"
+//    systemProperty "org.apache.commons.logging.simplelog.log.org.apache.http","DEBUG"
+//    systemProperty "org.apache.commons.logging.simplelog.log.org.apache.http.wire","ERROR"
 }
 
 task(Server, dependsOn: 'classes', type: JavaExec) {

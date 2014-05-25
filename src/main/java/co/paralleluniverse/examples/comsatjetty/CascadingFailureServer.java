@@ -1,31 +1,24 @@
 package co.paralleluniverse.examples.comsatjetty;
 
-import co.paralleluniverse.fibers.Fiber;
 import co.paralleluniverse.fibers.SuspendExecution;
 import co.paralleluniverse.fibers.httpclient.FiberHttpClient;
 import co.paralleluniverse.fibers.servlet.FiberHttpServlet;
 import com.codahale.metrics.ConsoleReporter;
+import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.nio.channels.spi.SelectorProvider;
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.BasicResponseHandler;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.eclipse.jetty.server.HttpConnection;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -37,96 +30,22 @@ public class CascadingFailureServer {
     private static final int THREAD_COUNT = 200;
     public static final MetricRegistry metrics = new MetricRegistry();
     public static AtomicInteger ai = new AtomicInteger();
+    final static String SERVICE_URL = "http://localhost:8080/target?sleep=";
 
     public static void main(String[] args) throws Exception {
-        System.out.println("Selector: "+SelectorProvider.provider());
-//        ConsoleReporter.forRegistry(metrics).build().start(2, TimeUnit.SECONDS);
-        int threads = args.length > 0 ? parseInt(args[0], THREAD_COUNT) : THREAD_COUNT;
+        System.out.println("Selector: " + SelectorProvider.provider());
+        ConsoleReporter.forRegistry(metrics).build().start(2, TimeUnit.SECONDS);
+        int threads = args.length > 0 ? Integer.parseInt(args[0], THREAD_COUNT) : THREAD_COUNT;
         System.out.println("Serving using " + threads + " threads....");
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-        Server server = createServer(threads, context);
-        FiberHttpClient fiberHttpClient = new FiberHttpClient(ClientTesters.createDefaultHttpAsyncClient());
-
-        CloseableHttpClient httpClient = HttpClients.custom().
-                setMaxConnPerRoute(99999).
-                setMaxConnTotal(99999).
-                setDefaultRequestConfig(RequestConfig.custom().
-                        setConnectTimeout(7000).
-                        setSocketTimeout(7000).
-                        setConnectionRequestTimeout(7000).build()).
-                build();
+        Server server = createJettyServer(threads, context);
+        FiberHttpClient fiberHttpClient = new FiberHttpClient(ClientTesters.createDefaultHttpAsyncClient(null));
 
         ResponseHandler<String> handler = new BasicResponseHandler();
-        final String TARGET_URL = "http://localhost:8080/target?sleep=";
 
-        context.addServlet(new ServletHolder(new HttpServlet() {
-//            final Client httpClient = ClientBuilder.newClient();
-
-            @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-                try (PrintWriter out = resp.getWriter()) {
-
-                    out.print("call: " + httpClient.execute(new HttpGet(TARGET_URL + req.getParameter("sleep")), handler));
-//                }
-//                try (PrintWriter out = resp.getWriter()) {
-//                    Thread.sleep(parseInt(req.getParameter("sleep"), 10));
-//                    out.println("answer: ok " + new Date().getTime());
-//                } catch (InterruptedException ex) {
-//                    throw new RuntimeException(ex);
-                }
-
-            }
-        }), "/regular");
-        context.addServlet(new ServletHolder(new FiberHttpServlet() {
-//            final Client httpClient = AsyncClientBuilder.newClient();
-
-            @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException, SuspendExecution {
-                try (PrintWriter out = resp.getWriter()) {
-                    out.print("call: " + fiberHttpClient.execute(new HttpGet(TARGET_URL + req.getParameter("sleep")), handler));
-////                try {
-//                    Fiber.sleep(parseInt(req.getParameter("sleep"), 10));
-//                    out.println("answer: ok " + new Date().getTime());
-//                    out.println("call: " + httpClient.target(TARGET_URL + req.getParameter("sleep")).request().get().readEntity(String.class));
-//                } catch (InterruptedException ex) {
-//                    throw new RuntimeException(ex);
-                }
-            }
-        }), "/fiber");
-        context.addServlet(new ServletHolder(new HttpServlet() {
-            @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-                try (PrintWriter out = resp.getWriter()) {
-                    out.println("do nothing. " + new Date().getTime());
-                }
-            }
-        }), "/simple");
-        context.addServlet(new ServletHolder(new FiberHttpServlet() {
-            @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException, SuspendExecution {
-//                int get = ai.incrementAndGet();
-//                if (get % 100 == 0)
-//                    System.out.println(new Date() + ": " + get);
-                try {//(PrintWriter out = resp.getWriter()) {
-                    int sleeptime = parseInt(req.getParameter("sleep"), 10);
-                    Fiber.sleep(sleeptime);
-//                    out.println("sleeping " + sleeptime + "ms starting now: " + new Date().getTime() + " \n");
-                } catch (InterruptedException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-        }), "/target");
-        context.addServlet(new ServletHolder(new FiberHttpServlet() {
-            @Override
-            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException, SuspendExecution {
-                try {
-                    server.stop();
-                    System.exit(0);
-                } catch (Exception ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-        }), "/shutdown");
+        context.addServlet(new ServletHolder(RoutingServlet.class), "/regular");
+        context.addServlet(new ServletHolder(FiberRoutingServlet.class), "/fiber");
+        context.addServlet(new ServletHolder(new TagetServlet()), "/target");
 
         server.start();
         System.out.println("http://localhost:8080/regular");
@@ -136,47 +55,44 @@ public class CascadingFailureServer {
         server.join();
     }
 
-    private static Server createServer(int threads, ServletContextHandler context) {
+    private static Server createJettyServer(int threads, ServletContextHandler context) {
 //        final BlockingQueue<Runnable> queue = new BlockingArrayQueue<>(10, 100, threads);
 //        QueuedThreadPool queuedThreadPool = new QueuedThreadPool(threads, 10, 60000, queue);
         final Timer execute = metrics.timer("execute");
         final Timer jobrun = metrics.timer("jobrun");
 
-
         // Use this in order to measure delay times in the queue
         final QueuedThreadPool queuedThreadPool = new QueuedThreadPool(threads) {
-            AtomicInteger ai2 = new AtomicInteger();
-
-            @Override
-            public void execute(Runnable job) {
-                Timer.Context executeCtx = execute.time();
-//                final StackTraceElement[] st = Thread.currentThread().getStackTrace();
-                super.execute(() -> {
-                    Timer.Context runCtx = jobrun.time();
-                    job.run();
-                    try {
-                        if (job.getClass().getName().equals("org.eclipse.jetty.io.AbstractConnection$2")) {
-                            Field f = job.getClass().getDeclaredField("this$0");
-                            if (f != null && f.getType().isAssignableFrom(HttpConnection.class)) {
-                                f.setAccessible(true);
-                                HttpConnection conn = (HttpConnection) f.get(job);
-                                String pathInfo = conn.getHttpChannel().getRequest().getPathInfo();
-                                if ("/target".equals(pathInfo)) {
-                                    executeCtx.stop();
-                                    runCtx.stop();
-                                }
-                            }
-                        }
-                    } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException ex) {
-                        Logger.getLogger(CascadingFailureServer.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                });
-            }
-
+//            AtomicInteger ai2 = new AtomicInteger();
+//
+//            @Override
+//            public void execute(Runnable job) {
+//                Timer.Context executeCtx = execute.time();
+//                super.execute(() -> {
+//                    Timer.Context runCtx = jobrun.time();
+//                    job.run();
+//                    try {
+//                        if (job.getClass().getName().equals("org.eclipse.jetty.io.AbstractConnection$2")) {
+//                            Field f = job.getClass().getDeclaredField("this$0");
+//                            if (f != null && f.getType().isAssignableFrom(HttpConnection.class)) {
+//                                f.setAccessible(true);
+//                                HttpConnection conn = (HttpConnection) f.get(job);
+//                                String pathInfo = conn.getHttpChannel().getRequest().getPathInfo();
+//                                if ("/target".equals(pathInfo)) {
+//                                    executeCtx.stop();
+//                                    runCtx.stop();
+//                                }
+//                            }
+//                        }
+//                    } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException ex) {
+//                        Logger.getLogger(CascadingFailureServer.class.getName()).log(Level.SEVERE, null, ex);
+//                    }
+//                });
+//            }
         };
 
-//        metrics.register("waiting jobs", (Gauge<Integer>) () -> queuedThreadPool.getQueueSize());
-//        metrics.register("threads num", (Gauge<Integer>) () -> queuedThreadPool.getThreads());
+        metrics.register("waiting jobs", (Gauge<Integer>) () -> queuedThreadPool.getQueueSize());
+        metrics.register("threads num", (Gauge<Integer>) () -> queuedThreadPool.getThreads());
         final Server server = new Server(queuedThreadPool);
         ServerConnector http = new ServerConnector(server);
         http.setPort(8080);
@@ -184,22 +100,7 @@ public class CascadingFailureServer {
         http.setAcceptQueueSize(99999);
         server.addConnector(http);
         server.setHandler(context);
-//        
-//        // Setup JMX
-//        MBeanContainer mbContainer = new MBeanContainer(ManagementFactory.getPlatformMBeanServer());
-//        server.addEventListener(mbContainer);
-////        server.getContainer().addEventListener(mbContainer);
-//        server.addBean(mbContainer);
         return server;
     }
 
-    static int parseInt(String str, int defaultVal) {
-        int val;
-        try {
-            val = Integer.parseInt(str);
-        } catch (NumberFormatException ex) {
-            val = defaultVal;
-        }
-        return val;
-    }
 }

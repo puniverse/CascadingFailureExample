@@ -4,11 +4,12 @@ import co.paralleluniverse.common.benchmark.StripedLongTimeSeries;
 import co.paralleluniverse.fibers.Fiber;
 import co.paralleluniverse.fibers.httpclient.FiberHttpClient;
 import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Snapshot;
 import com.codahale.metrics.Timer;
 import com.google.common.util.concurrent.RateLimiter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,6 +18,9 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -39,8 +43,8 @@ public class ClientTesters {
             System.out.println("args are " + Arrays.toString(args));
             System.out.println("Usage: ClientTesters baseUrl servletPath sleepTime rate");
             System.out.println("Example:\n\tClientTesters http://localhost:8080 /regular 10 500");
-//            args = new String[]{"http://46.137.129.107:8080", "/fiber", "5000", "10"};
-            System.exit(0);
+            args = new String[]{"http://localhost:8080", "/target", "5000", "1"};
+//            System.exit(0);
         }
         final ConcurrentHashMap<String, AtomicInteger> errors = new ConcurrentHashMap<>();
         final String HOST = args[0];
@@ -49,23 +53,24 @@ public class ClientTesters {
         final int rate = Integer.parseInt(args[3]);
         System.out.println("configuration: " + HOST + " " + URL1 + " " + rate);
         final ThreadFactory deamonTF = new ThreadFactoryBuilder().setDaemon(true).build();
-        CloseableHttpAsyncClient ahc = createDefaultHttpAsyncClient();
-
-        final AtomicInteger url1Errors = new AtomicInteger();
-        final AtomicInteger url2Errors = new AtomicInteger();
 
         final StripedLongTimeSeries opendUrl1 = new StripedLongTimeSeries(100000, false);
         final StripedLongTimeSeries latUrl2 = new StripedLongTimeSeries(100000, false);
 
 //        try (CloseableHttpAsyncClient ahc = HttpAsyncClientBuilder.create().setConnectionManager(mngr).build()) {
 //        try (CloseableHttpAsyncClient ahc = HttpAsyncClientBuilder.create().setMaxConnPerRoute(9999).setMaxConnTotal(9999).build()) {
-        try (CloseableHttpClient client = new FiberHttpClient(ahc)) {
+//        InetAddress[] addresses = new InetAddress[6];
+//        for (int i = 0; i < addresses.length; i++)
+//            addresses[i] = new InetSocketAddress(URL2, i);InetAddress.getByName("192.168.1."+(i+1));
+//        CloseableHttpClient[] clients = new CloseableHttpClient[addresses.length];
+//        for (int i = 0; i < clients.length; i++)
+//            clients[i] = new FiberHttpClient(createDefaultHttpAsyncClient(addresses[i]));
+        try (CloseableHttpClient client = new FiberHttpClient(createDefaultHttpAsyncClient(null))) {
+            System.out.println("warming up..");
+            call(new HttpGet(URL2), rate, 5, null, null, null, MAX_CONN, client, deamonTF).await();
+            Thread.sleep(5000);
 
-//            System.out.println("warming up..");
-//            call(new HttpGet(URL2), 500, 5, null, null, null, MAX_CONN, client, deamonTF).await();
-//            Thread.sleep(10000);
-
-            System.out.println(new Date()+" starting..");
+            System.out.println(new Date() + " starting..");
             final long start = System.nanoTime();
             CountDownLatch latch1 = call(new HttpGet(URL1), rate, DURATION, opendUrl1, latUrl2, errors, MAX_CONN, client, deamonTF);
 //            call(new HttpGet(URL2), 5, DURATION, null, latUrl2, errors, MAX_CONN, client, deamonTF).await();
@@ -77,19 +82,24 @@ public class ClientTesters {
             });
 //            opendUrl1.getRecords().forEach(rec -> System.out.println("url1_cnt " + TimeUnit.NANOSECONDS.toMillis(rec.timestamp - start) + " " + rec.value));
         }
+
     }
 
-    public static CloseableHttpAsyncClient createDefaultHttpAsyncClient() throws IOReactorException {
-        DefaultConnectingIOReactor ioreactor = new DefaultConnectingIOReactor(IOReactorConfig.custom().
-                setConnectTimeout(TIMEOUT).
-                setIoThreadCount(10).
-                setSoTimeout(TIMEOUT).
-                build());
-        PoolingNHttpClientConnectionManager mngr = new PoolingNHttpClientConnectionManager(ioreactor);
-        mngr.setDefaultMaxPerRoute(MAX_CONN);
-        mngr.setMaxTotal(MAX_CONN);
-        CloseableHttpAsyncClient ahc = HttpAsyncClientBuilder.create().setConnectionManager(mngr).build();
-        return ahc;
+    public static CloseableHttpAsyncClient createDefaultHttpAsyncClient(final InetAddress address)  {
+        try {
+            PoolingNHttpClientConnectionManager mngr = new PoolingNHttpClientConnectionManager(new DefaultConnectingIOReactor(IOReactorConfig.custom().
+                    setConnectTimeout(TIMEOUT).
+                    setIoThreadCount(10).
+                    setSoTimeout(TIMEOUT).
+                    build()));
+            mngr.setDefaultMaxPerRoute(MAX_CONN);
+            mngr.setMaxTotal(MAX_CONN);
+            return HttpAsyncClientBuilder.create().
+                    setConnectionManager(mngr).
+                    setDefaultRequestConfig(RequestConfig.custom().setLocalAddress(address).build()).build();
+        } catch (IOReactorException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     private static CountDownLatch call(
@@ -98,7 +108,7 @@ public class ClientTesters {
         int num = duration * rate;
         int tenth = num / 10;
         Timer httpTimer = metrics.timer(httpGet.getURI().toString() + rate);
-        Timer fiberTimer = metrics.timer("fiber"+httpGet.getURI().toString() + rate);
+        Timer fiberTimer = metrics.timer("fiber" + httpGet.getURI().toString() + rate);
         CountDownLatch cdl = new CountDownLatch(num);
         Semaphore sem = new Semaphore(maxOpen);
         Thread url1Thread = deamonTF.newThread(() -> {
@@ -112,9 +122,9 @@ public class ClientTesters {
                 if (sem.availablePermits() == 0)
                     System.out.println(new Date() + " waiting...");
                 sem.acquireUninterruptibly();
-                int k=i+1;
+                final int k = i + 1;
                 if (openedCountSeries != null && k % tenth == 0)
-                    System.out.println(new Date() + " sent("+k+") " + k / tenth * 10 + "%...");
+                    System.out.println(new Date() + " sent(" + k + ") " + k / tenth * 10 + "%...");
 
 //                if (openedCountSeries != null)
 //                    System.out.println(">" + (maxOpen - sem.availablePermits()));
@@ -142,8 +152,8 @@ public class ClientTesters {
                         long count = num - cdl.getCount();
                         if (openedCountSeries != null && (count) % tenth == 0) {
 //                            System.out.println("dd "+ (num-cdl.getCount()) + " : "+ tenth + " : "+(num-cdl.getCount()% tenth));
-                            System.out.print(new Date() + " responeded ("+count+") " + ((count) / tenth * 10) + "%...");
-                            System.out.println(" " + httpTimer.getSnapshot().getMean()+" "+fiberTimer.getSnapshot().getMean());
+                            System.out.print(new Date() + " responeded (" + count + ") " + ((count) / tenth * 10) + "%...");
+                            System.out.println(" " + httpTimer.getSnapshot().getMean() + " " + fiberTimer.getSnapshot().getMean());
                         }
 
 //                        }
