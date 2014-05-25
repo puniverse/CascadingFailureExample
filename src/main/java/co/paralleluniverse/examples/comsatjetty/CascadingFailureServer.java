@@ -18,7 +18,7 @@ public class CascadingFailureServer {
 
     public static void main(String[] args) throws Exception {
 //        ConsoleReporter.forRegistry(metrics).build().start(2, TimeUnit.SECONDS);
-        int threads = args.length > 0 ? Integer.parseInt(args[0], THREAD_COUNT_DEFAULT) : THREAD_COUNT_DEFAULT;
+        int threads = args.length > 0 ? Integer.parseInt(args[0]) : THREAD_COUNT_DEFAULT;
         System.out.println("Serving using " + threads + " threads....");
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         Server server = createJettyServer(threads, context);
