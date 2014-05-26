@@ -6,9 +6,12 @@ sourceCompatibility = '1.8'
 if (!hasProperty('mainClass')) {
     ext.mainClass = ''
 }
-ext.quasarVersion = '0.6.0-SNAPSHOT'
-ext.comsatVersion = '0.2.0-SNAPSHOT'
-ext.jettyVersion  = '9.2.0.M0'
+ext.quasarVersion   = '0.6.0-SNAPSHOT'
+ext.comsatVersion   = '0.2.0-SNAPSHOT'
+ext.jettyVersion    = '9.2.0.M0'
+ext.undertowVersion = '1.0.12.Final'
+ext.tomcatVersion   = '8.0.8'
+ext.log4jVersion    = '2.0-rc1'
 
 repositories {
     mavenLocal();
@@ -32,20 +35,26 @@ configurations.all {
 
 dependencies {
     compile "org.slf4j:slf4j-api:1.7.7"
-    //  runtime "org.slf4j:slf4j-jdk14:1.7.7"
-    runtime "org.apache.logging.log4j:log4j-slf4j-impl:2.0-rc1"
-    runtime "org.apache.logging.log4j:log4j-api:2.0-rc1"
-    runtime "org.apache.logging.log4j:log4j-core:2.0-rc1"
     compile "co.paralleluniverse:quasar-core:$quasarVersion"
+    quasar  "co.paralleluniverse:quasar-core:$quasarVersion"
     compile "co.paralleluniverse:comsat-servlet:$comsatVersion"
     compile "co.paralleluniverse:comsat-httpclient:$comsatVersion"    
+    
     compile "org.eclipse.jetty:jetty-server:$jettyVersion"
     compile "org.eclipse.jetty:jetty-servlet:$jettyVersion"
-    quasar  "co.paralleluniverse:quasar-core:$quasarVersion"
-    compile 'io.undertow:undertow-core:1.0.12.Final'
-    compile 'io.undertow:undertow-servlet:1.0.12.Final'
-    compile 'io.undertow:undertow-websockets-jsr:1.0.12.Final'
-    compile 'io.undertow:undertow-examples:1.0.12.Final'
+    
+    compile "io.undertow:undertow-core:$undertowVersion"
+    compile "io.undertow:undertow-servlet:$undertowVersion"
+
+    compile "org.apache.tomcat.embed:tomcat-embed-core:$tomcatVersion"
+    compile "org.apache.tomcat.embed:tomcat-embed-jasper:$tomcatVersion"
+    runtime "org.apache.tomcat.embed:tomcat-embed-logging-log4j:$tomcatVersion"
+    
+    runtime "org.apache.logging.log4j:log4j-slf4j-impl:$log4jVersion"
+    runtime "org.apache.logging.log4j:log4j-api:$log4jVersion"
+    runtime "org.apache.logging.log4j:log4j-core:$log4jVersion"
+    
+    compile 'commons-cli:commons-cli:1.2'
 }
 
 tasks.withType(JavaExec) {
