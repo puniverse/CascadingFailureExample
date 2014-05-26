@@ -3,3 +3,4 @@
 .nb-gradle/
 *.log
 *.jfr
+/tomcat.*

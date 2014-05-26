@@ -1,4 +1,4 @@
-#wget https://raw.githubusercontent.com/puniverse/CascadingFailureExample/master/install.sh
+#wget https://raw.githubusercontent.com/puniverse/CascadingFailureExample/master/scripts/install.sh
 #chmod+x and run
 
 # install jdk8
@@ -37,4 +37,5 @@ cd
 
 #project specific scripts
 git clone https://github.com/puniverse/CascadingFailureExample.git
-CascadingFailureExample/postinstall.sh
+cd CascadingFailureExample
+scripts/postinstall.sh
