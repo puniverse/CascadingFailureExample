@@ -69,31 +69,14 @@ tasks.withType(JavaExec) {
     classpath = sourceSets.main.runtimeClasspath   
     if(project.hasProperty('args')){
         args project.args.split('\\s+')
-        //    } else {
-        //        args "http://54.73.179.243:1234","/fiber","5000","50"
     }
-    //        args "http://localhost:8080","/fiber","5000","1000"
-    //    systemProperty 'com.sun.management.jmxremote.port','1234'
-    //    systemProperty 'com.Fsun.management.jmxremote.authenticate','false'
-    //    systemProperty 'com.sun.management.jmxremote.ssl','false'
+
     // systemProperty 'co.paralleluniverse.fibers.verifyInstrumentation', 'true'
-//    systemProperty "org.apache.commons.logging.Log","org.apache.commons.logging.impl.SimpleLog"
-//    systemProperty "org.apache.commons.logging.simplelog.showdatetime","true"
-////    systemProperty "org.apache.commons.logging.simplelog.log.org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager","DEBUG"
-//    systemProperty "org.apache.commons.logging.simplelog.log.org.apache.http","DEBUG"
-//    systemProperty "org.apache.commons.logging.simplelog.log.org.apache.http.wire","ERROR"
+
 }
 
 task(Server, dependsOn: 'classes', type: JavaExec) {
     main = 'co.paralleluniverse.examples.comsatjetty.CascadingFailureServer'
 }
-//task(Clients, dependsOn: 'classes', type: JavaExec) {
-//    main = 'co.paralleluniverse.examples.comsatjetty.ClientTesters'
-//}
-//task(PerfServ, dependsOn: 'classes', type: JavaExec) {
-//    main = 'co.paralleluniverse.examples.comsatjetty.PerformanceTest'
-//}
-//task(PerfCli, dependsOn: 'classes', type: JavaExec) {
-//    main = 'co.paralleluniverse.examples.comsatjetty.PerfClient'
-//}
+
 defaultTasks 'Server'
