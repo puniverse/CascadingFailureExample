@@ -60,7 +60,7 @@ public class CascadingFailureServer {
         Undertow server = Undertow.builder()
                 .setIoThreads(threads)
                 .addHttpListener(8080, "localhost")
-                .setHandler(Handlers.requestLimitingHandler(new RequestLimit(threads),servletsContainer.start()))
+                .setHandler(Handlers.requestLimitingHandler(new RequestLimit(MAX_CONN), servletsContainer.start()))
                 .build();
         server.start();
     }
