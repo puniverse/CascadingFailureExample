@@ -18,7 +18,7 @@ public class MainServiceFiber extends FiberHttpServlet {
     private final BasicResponseHandler basicResponseHandler;
     
     public MainServiceFiber() {
-        httpClient  = FiberHttpClientBuilder.create().
+        httpClient = FiberHttpClientBuilder.create().
                 setMaxConnPerRoute(Main.MAX_CONN).
                 setMaxConnTotal(Main.MAX_CONN).
                 setDefaultRequestConfig(RequestConfig.custom().

@@ -1,12 +1,11 @@
 apply plugin: 'java'
 apply plugin: 'application'
 
-sourceCompatibility = '1.8'
+sourceCompatibility = '1.7'
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
-if (!hasProperty('mainClass')) {
-    ext.mainClass = ''
-}
+mainClassName = 'co.paralleluniverse.examples.cascading.Main'
+
 ext.quasarVersion   = '0.6.0-SNAPSHOT'
 ext.comsatVersion   = '0.2.0-SNAPSHOT'
 ext.jettyVersion    = '9.2.0.M0'
@@ -59,15 +58,16 @@ dependencies {
     compile 'commons-cli:commons-cli:1.2'
 }
 
-tasks.withType(JavaExec) {
-    main = mainClass
+run {
     jvmArgs "-javaagent:${configurations.quasar.iterator().next()}" // =v, =d
     jvmArgs '-server'
 //    jvmArgs "-XX:+UnlockCommercialFeatures","-XX:+FlightRecorder"
 //    jvmArgs "-XX:StartFlightRecording=duration=30s,delay=2s,filename=myrecording.jfr,settings=ProfilingHeap.jfc"
     jvmArgs '-Xmx4096m'
     jvmArgs "-XX:+UseG1GC","-XX:MaxGCPauseMillis=200"
+    
     //    jvmArgs "-ea"
+    
     classpath = sourceSets.main.runtimeClasspath   
     if(project.hasProperty('args')){
         args project.args.split('\\s+')
@@ -75,10 +75,6 @@ tasks.withType(JavaExec) {
 
     // systemProperty 'co.paralleluniverse.fibers.verifyInstrumentation', 'true'
 
-}
-
-run {
-    main = 'co.paralleluniverse.examples.cascading.Main'
 }
 
 defaultTasks 'build'
