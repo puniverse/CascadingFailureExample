@@ -5,9 +5,7 @@ import io.undertow.Undertow;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.RequestLimit;
 import io.undertow.servlet.Servlets;
-import io.undertow.servlet.api.DeploymentInfo;
-import io.undertow.servlet.api.DeploymentManager;
-import io.undertow.servlet.api.ServletInfo;
+import io.undertow.servlet.api.*;
 import javax.servlet.Servlet;
 
 public class UndertowServer extends AbstractEmbeddedServer {
@@ -35,12 +33,10 @@ public class UndertowServer extends AbstractEmbeddedServer {
         servletsContainer.deploy();
         HttpHandler handler = servletsContainer.start();
         handler = Handlers.requestLimitingHandler(new RequestLimit(maxConn), handler);
-        Undertow server = Undertow.builder()
+        Undertow server = Undertow.builder().setHandler(handler)
                 .setIoThreads(nThreads)
                 .addHttpListener(port, "localhost")
-                .setHandler(handler)
                 .build();
-        
         server.start();
     }
 
