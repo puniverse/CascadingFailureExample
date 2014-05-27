@@ -16,7 +16,7 @@ public class Service extends HttpServlet {
     private final BasicResponseHandler basicResponseHandler;
 
     public Service() {
-        httpClient = FiberHttpClientBuilder.create().
+        httpClient = FiberHttpClientBuilder.create(). // <---------- FIBER
                 setMaxConnPerRoute(Main.MAX_CONN).
                 setMaxConnTotal(Main.MAX_CONN).
                 setDefaultRequestConfig(RequestConfig.custom().
@@ -28,7 +28,7 @@ public class Service extends HttpServlet {
 
     @GET
     @Produces("text/plain")
-    @Suspendable
+    @Suspendable  // <------------- FIBER
     public String get(@QueryParam("sleep") int sleep) throws IOException {
         // simulate a call to a service that always completes in 10 ms
         String res1 = httpClient.execute(new HttpGet(Main.SERVICE_URL + 10), basicResponseHandler);
