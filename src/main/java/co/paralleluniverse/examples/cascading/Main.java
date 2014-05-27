@@ -38,7 +38,7 @@ public class Main {
         Options options = new Options();
         options.addOption("threads", true, "number of threads");
         options.addOption("server", true, "jetty/tomcat/undertow");
-        options.addOption("fiber", false, "use fibers");
+        options.addOption("fibers", false, "use fibers");
         options.addOption("help", false, "print help");
         try {
             CommandLine cmd = new BasicParser().parse(options, args);
@@ -46,7 +46,7 @@ public class Main {
                 printUsageAndExit(options);
             final String server = cmd.getOptionValue("server", "jetty").toLowerCase();
             final int threads = Integer.parseInt(cmd.getOptionValue("threads", Integer.toString(THREAD_COUNT_DEFAULT)));
-            final boolean useFibers = cmd.hasOption("fiber");
+            final boolean useFibers = cmd.hasOption("fibers");
 
             System.out.println("Serving with " + server + " with " + threads + " IO threads - " + (useFibers ? "USING" : "NOT USING") + " FIBERS");
             System.out.println("http://localhost:8080/api/service?sleep=5000");
