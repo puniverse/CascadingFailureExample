@@ -2,6 +2,7 @@ package co.paralleluniverse.examples.cascading;
 
 import io.undertow.Handlers;
 import io.undertow.Undertow;
+import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.RequestLimit;
 import io.undertow.servlet.Servlets;
 import io.undertow.servlet.api.DeploymentInfo;
@@ -15,10 +16,9 @@ public class UndertowServer extends AbstractEmbeddedServer {
     private void build() {
         if (deployment != null)
             return;
-        this.deployment = Servlets.deployment()
+        this.deployment = Servlets.deployment().setDeploymentName("")
                 .setClassLoader(ClassLoader.getSystemClassLoader())
-                .setContextPath("/")
-                .setDeploymentName("");
+                .setContextPath("/");
     }
 
     @Override
@@ -31,12 +31,14 @@ public class UndertowServer extends AbstractEmbeddedServer {
 
     @Override
     public void run() throws Exception {
-        final DeploymentManager servletsContainer = Servlets.defaultContainer().addDeployment(deployment);
+        DeploymentManager servletsContainer = Servlets.defaultContainer().addDeployment(deployment);
         servletsContainer.deploy();
+        HttpHandler handler = servletsContainer.start();
+        handler = Handlers.requestLimitingHandler(new RequestLimit(maxConn), handler);
         Undertow server = Undertow.builder()
                 .setIoThreads(nThreads)
                 .addHttpListener(port, "localhost")
-                .setHandler(Handlers.requestLimitingHandler(new RequestLimit(maxConn), servletsContainer.start()))
+                .setHandler(handler)
                 .build();
         
         server.start();
