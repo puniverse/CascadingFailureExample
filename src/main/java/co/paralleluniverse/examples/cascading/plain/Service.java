@@ -14,13 +14,13 @@ public class Service extends HttpServlet {
     private final BasicResponseHandler basicResponseHandler;
 
     public Service() {
-        httpClient = HttpClientBuilder.create().
-                setMaxConnPerRoute(Main.MAX_CONN).
-                setMaxConnTotal(Main.MAX_CONN).
-                setDefaultRequestConfig(RequestConfig.custom().
-                        setConnectTimeout(Main.TIMEOUT).
-                        setSocketTimeout(Main.TIMEOUT).
-                        setConnectionRequestTimeout(Main.TIMEOUT).build()).build();
+        httpClient = HttpClientBuilder.create()
+                .setMaxConnPerRoute(Main.MAX_CONN)
+                .setMaxConnTotal(Main.MAX_CONN)
+                .setDefaultRequestConfig(RequestConfig.custom()
+                        .setConnectTimeout(Main.TIMEOUT)
+                        .setSocketTimeout(Main.TIMEOUT)
+                        .setConnectionRequestTimeout(Main.TIMEOUT).build()).build();
         basicResponseHandler = new BasicResponseHandler();
     }
 
