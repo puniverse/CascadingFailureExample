@@ -1,4 +1,4 @@
-package co.paralleluniverse.examples.comsatjetty;
+package co.paralleluniverse.examples.cascading;
 
 import co.paralleluniverse.fibers.Fiber;
 import co.paralleluniverse.fibers.SuspendExecution;
@@ -10,14 +10,13 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class TargetServlet extends FiberHttpServlet {
-
+public class SimulatedMicroservice extends FiberHttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException, SuspendExecution {
         try (PrintWriter out = resp.getWriter()) {
             int sleeptime = parseInt(req.getParameter("sleep"), 10);
             Fiber.sleep(sleeptime);
-            out.println("sleeping " + sleeptime + "ms starting now: " + new Date().getTime() + " \n");
+            out.println("sleeping " + sleeptime + " ms starting now: " + new Date().getTime() + " \n");
         } catch (InterruptedException ex) {
             throw new RuntimeException(ex);
         }

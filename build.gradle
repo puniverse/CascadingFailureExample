@@ -1,4 +1,5 @@
 apply plugin: 'java'
+apply plugin: 'application'
 
 sourceCompatibility = '1.8'
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
@@ -39,6 +40,7 @@ dependencies {
     quasar  "co.paralleluniverse:quasar-core:$quasarVersion"
     compile "co.paralleluniverse:comsat-servlet:$comsatVersion"
     compile "co.paralleluniverse:comsat-httpclient:$comsatVersion"    
+    compile "co.paralleluniverse:comsat-jersey-server:$comsatVersion"
     
     compile "org.eclipse.jetty:jetty-server:$jettyVersion"
     compile "org.eclipse.jetty:jetty-servlet:$jettyVersion"
@@ -75,8 +77,8 @@ tasks.withType(JavaExec) {
 
 }
 
-task(Server, dependsOn: 'classes', type: JavaExec) {
-    main = 'co.paralleluniverse.examples.comsatjetty.CascadingFailureServer'
+run {
+    main = 'co.paralleluniverse.examples.cascading.Main'
 }
 
-defaultTasks 'Server'
+defaultTasks 'build'

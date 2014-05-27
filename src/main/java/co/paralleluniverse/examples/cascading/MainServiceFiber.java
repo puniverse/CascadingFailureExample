@@ -1,4 +1,4 @@
-package co.paralleluniverse.examples.comsatjetty;
+package co.paralleluniverse.examples.cascading;
 
 import co.paralleluniverse.fibers.httpclient.FiberHttpClientBuilder;
 import co.paralleluniverse.fibers.SuspendExecution;
@@ -13,18 +13,18 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.CloseableHttpClient;
 
-public class FiberRoutingServlet extends FiberHttpServlet {
+public class MainServiceFiber extends FiberHttpServlet {
     private final CloseableHttpClient httpClient;
     private final BasicResponseHandler basicResponseHandler;
     
-    public FiberRoutingServlet() {
+    public MainServiceFiber() {
         httpClient  = FiberHttpClientBuilder.create().
-                setMaxConnPerRoute(CascadingFailureServer.MAX_CONN).
-                setMaxConnTotal(CascadingFailureServer.MAX_CONN).
+                setMaxConnPerRoute(Main.MAX_CONN).
+                setMaxConnTotal(Main.MAX_CONN).
                 setDefaultRequestConfig(RequestConfig.custom().
-                        setConnectTimeout(CascadingFailureServer.TIMEOUT).
-                        setSocketTimeout(CascadingFailureServer.TIMEOUT).
-                        setConnectionRequestTimeout(CascadingFailureServer.TIMEOUT).build()).build();
+                        setConnectTimeout(Main.TIMEOUT).
+                        setSocketTimeout(Main.TIMEOUT).
+                        setConnectionRequestTimeout(Main.TIMEOUT).build()).build();
         basicResponseHandler = new BasicResponseHandler();
     }
 
@@ -32,10 +32,9 @@ public class FiberRoutingServlet extends FiberHttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws SuspendExecution, ServletException, IOException {
         try (PrintWriter out = resp.getWriter()) {
             final String callResponse = "true".equals(req.getParameter("callService"))
-                    ? httpClient.execute(new HttpGet(CascadingFailureServer.SERVICE_URL + req.getParameter("sleep")), basicResponseHandler)
+                    ? httpClient.execute(new HttpGet(Main.SERVICE_URL + req.getParameter("sleep")), basicResponseHandler)
                     : "skipped";
             out.print("call response: " + callResponse);
         }
     }
-
 }
