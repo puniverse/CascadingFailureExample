@@ -13,5 +13,6 @@ public interface EmbeddedServer {
     
     interface ServletDesc {
         ServletDesc setInitParameter(String name, String value);
+        ServletDesc setLoadOnStartup(int load);
     }
 }

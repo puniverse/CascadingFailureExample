@@ -54,9 +54,11 @@ public class Main {
 
         server.setPort(PORT).setMaxConnections(MAX_CONN).setNumThreads(threads);
         server.addServlet("internal", JERSEY_FIBER_SERVLET, "/internal/*")
-                .setInitParameter(PARAM_JERSEY_PACKAGES, PACKAGE_NAME_PREFIX + "internal");
+                .setInitParameter(PARAM_JERSEY_PACKAGES, PACKAGE_NAME_PREFIX + "internal")
+                .setLoadOnStartup(1);
         server.addServlet("service", useFibers ? JERSEY_FIBER_SERVLET : JERSEY_SERVLET, "/api/*") // <-------------
-                .setInitParameter(PARAM_JERSEY_PACKAGES, PACKAGE_NAME_PREFIX + (useFibers ? "fibers" : "plain"));
+                .setInitParameter(PARAM_JERSEY_PACKAGES, PACKAGE_NAME_PREFIX + (useFibers ? "fibers" : "plain"))
+                .setLoadOnStartup(1);
 
         server.run();
     }

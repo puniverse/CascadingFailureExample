@@ -45,15 +45,21 @@ public class UndertowServer extends AbstractEmbeddedServer {
     }
 
     private static class UndertowServletDesc implements ServletDesc {
-        private final ServletInfo info;
+        private final ServletInfo impl;
 
         public UndertowServletDesc(ServletInfo info) {
-            this.info = info;
+            this.impl = info;
         }
 
         @Override
         public ServletDesc setInitParameter(String name, String value) {
-            info.addInitParam(name, value);
+            impl.addInitParam(name, value);
+            return this;
+        }
+
+        @Override
+        public ServletDesc setLoadOnStartup(int load) {
+            impl.setLoadOnStartup(load);
             return this;
         }
     }

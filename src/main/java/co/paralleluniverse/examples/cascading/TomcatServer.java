@@ -27,23 +27,29 @@ public class TomcatServer extends AbstractEmbeddedServer {
         w.addMapping(mapping);
         return new TomcatServletDesc(w);
     }
-    
+
     @Override
     public void run() throws Exception {
         tomcat.start();
         tomcat.getServer().await();
     }
-    
+
     private static class TomcatServletDesc implements ServletDesc {
-        private final Wrapper w;
+        private final Wrapper impl;
 
         public TomcatServletDesc(Wrapper w) {
-            this.w = w;
+            this.impl = w;
         }
 
         @Override
         public ServletDesc setInitParameter(String name, String value) {
-            w.addInitParameter(name, value);
+            impl.addInitParameter(name, value);
+            return this;
+        }
+
+        @Override
+        public ServletDesc setLoadOnStartup(int load) {
+            impl.setLoadOnStartup(load);
             return this;
         }
     }
