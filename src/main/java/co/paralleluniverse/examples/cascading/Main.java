@@ -25,46 +25,43 @@ public class Main {
         options.addOption("server", true, "jetty/tomcat/undertow");
         options.addOption("fibers", false, "use fibers");
         options.addOption("help", false, "print help");
-        try {
-            final CommandLine cmd = new BasicParser().parse(options, args);
-            if (cmd.hasOption("help")) {
+
+        final CommandLine cmd = new BasicParser().parse(options, args);
+        if (cmd.hasOption("help")) {
+            new HelpFormatter().printHelp("run.sh server [options]", options);
+            return;
+        }
+
+        final String serverType = cmd.getOptionValue("server", "jetty").toLowerCase();
+        final int threads = Integer.parseInt(cmd.getOptionValue("threads", Integer.toString(THREAD_COUNT_DEFAULT)));
+        final boolean useFibers = cmd.hasOption("fibers");
+
+        System.out.println("Serving with " + serverType + " with " + threads + " IO threads - " + (useFibers ? "USING" : "NOT USING") + " FIBERS");
+        System.out.println("http://localhost:8080/api/service?sleep=5000");
+
+        EmbeddedServer server;
+        switch (serverType) {
+            case "jetty":
+                server = new JettyServer();
+                break;
+            case "tomcat":
+                server = new TomcatServer();
+                break;
+            case "undertow":
+                server = new UndertowServer();
+                break;
+            default:
+                System.err.println("Unknown server type '" + serverType + "'");
                 new HelpFormatter().printHelp("run.sh server [options]", options);
                 return;
-            }
-
-            final String serverType = cmd.getOptionValue("server", "jetty").toLowerCase();
-            final int threads = Integer.parseInt(cmd.getOptionValue("threads", Integer.toString(THREAD_COUNT_DEFAULT)));
-            final boolean useFibers = cmd.hasOption("fibers");
-
-            System.out.println("Serving with " + serverType + " with " + threads + " IO threads - " + (useFibers ? "USING" : "NOT USING") + " FIBERS");
-            System.out.println("http://localhost:8080/api/service?sleep=5000");
-
-            EmbeddedServer server;
-            switch (serverType) {
-                case "jetty":
-                    server = new JettyServer();
-                    break;
-                case "tomcat":
-                    server = new TomcatServer();
-                    break;
-                case "undertow":
-                    server = new UndertowServer();
-                    break;
-                default:
-                    System.err.println("Unknown server type '" + serverType + "'");
-                    new HelpFormatter().printHelp("run.sh server [options]", options);
-                    return;
-            }
-
-            server.setPort(PORT).setMaxConnections(MAX_CONN).setNumThreads(threads);
-            server.addServlet("internal", JERSEY_FIBER_SERVLET, "/internal/*")
-                    .setInitParameter(PARAM_JERSEY_PACKAGES, PACKAGE_NAME_PREFIX + "internal");
-            server.addServlet("service", useFibers ? JERSEY_FIBER_SERVLET : JERSEY_SERVLET, "/api/*")
-                    .setInitParameter(PARAM_JERSEY_PACKAGES, PACKAGE_NAME_PREFIX + (useFibers ? "fibers" : "plain"));
-            
-            server.run();
-        } catch (ParseException ex) {
-            System.err.println("Parsing failed.  Reason: " + ex.getMessage());
         }
+
+        server.setPort(PORT).setMaxConnections(MAX_CONN).setNumThreads(threads);
+        server.addServlet("internal", JERSEY_FIBER_SERVLET, "/internal/*")
+                .setInitParameter(PARAM_JERSEY_PACKAGES, PACKAGE_NAME_PREFIX + "internal");
+        server.addServlet("service", useFibers ? JERSEY_FIBER_SERVLET : JERSEY_SERVLET, "/api/*")
+                .setInitParameter(PARAM_JERSEY_PACKAGES, PACKAGE_NAME_PREFIX + (useFibers ? "fibers" : "plain"));
+
+        server.run();
     }
 }
