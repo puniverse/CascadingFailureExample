@@ -22,7 +22,6 @@ public class FiberRoutingServlet extends FiberHttpServlet {
                 setMaxConnPerRoute(CascadingFailureServer.MAX_CONN).
                 setMaxConnTotal(CascadingFailureServer.MAX_CONN).
                 setDefaultRequestConfig(RequestConfig.custom().
-//                        setLocalAddress(null).
                         setConnectTimeout(CascadingFailureServer.TIMEOUT).
                         setSocketTimeout(CascadingFailureServer.TIMEOUT).
                         setConnectionRequestTimeout(CascadingFailureServer.TIMEOUT).build()).build();
