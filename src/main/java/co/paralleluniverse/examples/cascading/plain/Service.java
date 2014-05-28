@@ -8,6 +8,8 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.*;
 
+
+
 @Path("/service")
 public class Service extends HttpServlet {
     private final CloseableHttpClient httpClient;
@@ -24,6 +26,7 @@ public class Service extends HttpServlet {
         basicResponseHandler = new BasicResponseHandler();
     }
 
+    
     @GET
     @Produces("text/plain")
     public String get(@QueryParam("sleep") int sleep) throws IOException {
