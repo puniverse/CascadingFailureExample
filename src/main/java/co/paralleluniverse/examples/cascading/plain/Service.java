@@ -2,14 +2,14 @@ package co.paralleluniverse.examples.cascading.plain;
 
 import co.paralleluniverse.examples.cascading.*;
 import java.io.IOException;
+import javax.inject.Singleton;
 import javax.servlet.http.HttpServlet;
 import javax.ws.rs.*;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.*;
 
-
-
+@Singleton
 @Path("/service")
 public class Service extends HttpServlet {
     private final CloseableHttpClient httpClient;
