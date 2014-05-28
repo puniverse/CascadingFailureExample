@@ -4,7 +4,6 @@ import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 
 public class Main {
     public static final int THREAD_COUNT_DEFAULT = 200;
