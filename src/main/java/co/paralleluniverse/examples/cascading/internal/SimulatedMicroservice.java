@@ -4,8 +4,10 @@ import co.paralleluniverse.fibers.SuspendExecution;
 import co.paralleluniverse.strands.Strand;
 import java.io.IOException;
 import java.util.Date;
+import javax.inject.Singleton;
 import javax.ws.rs.*;
 
+@Singleton
 @Path("/foo")
 public class SimulatedMicroservice {
     @GET
