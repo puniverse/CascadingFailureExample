@@ -30,24 +30,30 @@ public class JettyServer extends AbstractEmbeddedServer {
         context.addServlet(sh, mapping);
         return new JettyServletDesc(sh);
     }
-    
+
     @Override
     public void run() throws Exception {
         server.setHandler(context);
         server.start();
         server.join();
     }
-    
+
     private static class JettyServletDesc implements ServletDesc {
-        private final ServletHolder sh;
+        private final ServletHolder impl;
 
         public JettyServletDesc(ServletHolder sh) {
-            this.sh = sh;
+            this.impl = sh;
         }
 
         @Override
         public ServletDesc setInitParameter(String name, String value) {
-            sh.setInitParameter(name, value);
+            impl.setInitParameter(name, value);
+            return this;
+        }
+
+        @Override
+        public ServletDesc setLoadOnStartup(int load) {
+            impl.setInitOrder(load);
             return this;
         }
     }

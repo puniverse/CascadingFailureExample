@@ -16,13 +16,13 @@ public class Service extends HttpServlet {
     private final BasicResponseHandler basicResponseHandler;
 
     public Service() {
-        httpClient = FiberHttpClientBuilder.create(). // <---------- FIBER
-                setMaxConnPerRoute(Main.MAX_CONN).
-                setMaxConnTotal(Main.MAX_CONN).
-                setDefaultRequestConfig(RequestConfig.custom().
-                        setConnectTimeout(Main.TIMEOUT).
-                        setSocketTimeout(Main.TIMEOUT).
-                        setConnectionRequestTimeout(Main.TIMEOUT).build()).build();
+        httpClient = FiberHttpClientBuilder.create() // <---------- FIBER
+                .setMaxConnPerRoute(Main.MAX_CONN)
+                .setMaxConnTotal(Main.MAX_CONN)
+                .setDefaultRequestConfig(RequestConfig.custom()
+                        .setConnectTimeout(Main.TIMEOUT)
+                        .setSocketTimeout(Main.TIMEOUT)
+                        .setConnectionRequestTimeout(Main.TIMEOUT).build()).build();
         basicResponseHandler = new BasicResponseHandler();
     }
 
