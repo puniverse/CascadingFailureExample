@@ -1,1 +1,1 @@
-./run.sh server -help
+./run.sh run -help
