@@ -13,7 +13,7 @@ import org.apache.http.impl.client.*;
 @Path("/service")
 public class Service extends HttpServlet {
     private final CloseableHttpClient httpClient;
-    private final BasicResponseHandler basicResponseHandler;
+    private static final BasicResponseHandler basicResponseHandler = new BasicResponseHandler();
 
     public Service() {
         httpClient = HttpClientBuilder.create()
@@ -23,7 +23,6 @@ public class Service extends HttpServlet {
                         .setConnectTimeout(Main.TIMEOUT)
                         .setSocketTimeout(Main.TIMEOUT)
                         .setConnectionRequestTimeout(Main.TIMEOUT).build()).build();
-        basicResponseHandler = new BasicResponseHandler();
     }
 
     
