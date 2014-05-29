@@ -13,7 +13,7 @@ set xtics rotate
 set timefmt "%H:%M:%S"
 set format x "%M:%S"
 set ylabel "response time [millis]"
-set yrange [ 0 : 30000.0]
+set yrange [ 0 : 10000.0]
 set grid
 plot "load.csv" using 1:2 title "a+b", "service.csv" using 1:2 title "a"
 EOF
