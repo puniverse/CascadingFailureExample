@@ -9,6 +9,7 @@ import io.undertow.servlet.api.*;
 import javax.servlet.Servlet;
 
 public class UndertowServer extends AbstractEmbeddedServer {
+    private static final String ANY_LOCAL_ADDRESS = "0.0.0.0"; // not "localhost"!
     private DeploymentInfo deployment;
 
     private void build() {
@@ -33,9 +34,10 @@ public class UndertowServer extends AbstractEmbeddedServer {
         servletsContainer.deploy();
         HttpHandler handler = servletsContainer.start();
         handler = Handlers.requestLimitingHandler(new RequestLimit(maxConn), handler);
-        Undertow server = Undertow.builder().setHandler(handler)
+        Undertow server = Undertow.builder()
+                .setHandler(handler)
                 .setIoThreads(nThreads)
-                .addHttpListener(port, "localhost")
+                .addHttpListener(port, ANY_LOCAL_ADDRESS)
                 .build();
         server.start();
     }
