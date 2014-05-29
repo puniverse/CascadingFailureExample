@@ -5,15 +5,17 @@ cat > gp <<EOF
 set terminal png size 1000,600
 set output '$1.png'
 set style data lines
-set title "Daily clock offset\nnegative means clock runs fast"
-set xlabel "Time"
+#set style data points
+set title ""
+set xlabel "Time [minutes:seconds]"
 set xdata time
+set xtics rotate 
 set timefmt "%H:%M:%S"
 set format x "%M:%S"
 set ylabel "response time [millis]"
-set yrange [ 0 : 12000.0]
+set yrange [ 0 : 30000.0]
 set grid
-plot "load.csv" using 1:2, "service.csv" using 1:2
+plot "load.csv" using 1:2 title "a+b", "service.csv" using 1:2 title "a"
 EOF
 gnuplot gp
-open $1.png
+#open $1.png
