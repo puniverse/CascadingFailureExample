@@ -12,7 +12,7 @@ The [`install_photon.sh` script](https://github.com/puniverse/CascadingFailureEx
 
 To run the server:
 
-    ./run.sh -server jetty/tomcat/undertow -threads <max-threads> [-fibers]
+    ./run.sh -server <jetty|tomcat|undertow> -threads <max-threads> [-fibers]
 
 The `-fibers` flag turns on the use of fibers.
 
